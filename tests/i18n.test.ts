@@ -71,3 +71,16 @@ describe("i18n", () => {
     vi.useRealTimers();
   });
 });
+
+describe("self-made characters", () => {
+  it("encodes, validates and rejects junk", async () => {
+    const { encodeFace, parseFace, isValidAvatar, randomFace } = await import("../src/shared/avatar");
+    for (let i = 0; i < 50; i++) {
+      const f = randomFace();
+      expect(parseFace(encodeFace(f))).toEqual(f);
+      expect(isValidAvatar(encodeFace(f))).toBe(true);
+    }
+    expect(isValidAvatar("🦊")).toBe(true);
+    for (const bad of ["x:zzzz", "x:000", "x:00000", "<script>", "💩", ""]) expect(isValidAvatar(bad)).toBe(false);
+  });
+});

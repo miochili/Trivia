@@ -3,7 +3,12 @@
 A multiplayer board-game trivia site with an old tavern feel: a parchment sea chart with a circular wooden track, wax seals, brass and a bone die. Create a room, share the short link (like `…/trivia-quest/KOBALI`), pick a little character, then roll the dice, travel around the board and answer questions. Play free-for-all or in teams, in **English, Español or Deutsch**. Every player picks their own language and sees the same question in it.
 
 - **Circular board.** Tiles run around a ring, starting at the top, with Finish right beside Start. In "All trophies" mode you keep going round and earn a lap bonus.
-- **Characters.** Type your name and tap one of 16 little characters (🧙 🧝 🤴 👸 🥷 🤠 🦊 🐻 🦉 🐸 …). Both are remembered for next time.
+- **Characters.** Type your name and tap one of 16 little characters (🧙 🧝 🤴 👸 🥷 🤠 🦊 🐻 🦉 🐸 …), or tap ✎ to **make your own** in skribbl.io/Kahoot style: 12 colours, 8 eyes, 8 mouths and 9 hats, plus a 🎲 random button. Your name and character are remembered for next time.
+- **Made for phones.**
+  - A close-up strip under the board shows the next tiles and where each roll (+1 to +6) would land.
+  - The screen stays awake during a game, and your phone buzzes when it's your turn (Android).
+  - The layout leaves room for the iPhone home bar.
+  - **Add to Home Screen** opens it full-screen like an app.
 - **Teams.** Each team has a banner and crest (Leo 🦁, Aquila 🦅, Lupus 🐺, Draco 🐉, Ursus 🐻, Vulpes 🦊), and teammates take turns rolling. The host picks how a team answers:
   - **Team vote** (default): everyone in the team taps an answer and the majority wins. A tie goes to the player whose turn it is.
   - **One player decides:** the player whose turn it is answers, and teammates can tap to suggest.

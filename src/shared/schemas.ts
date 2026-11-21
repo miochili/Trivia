@@ -4,7 +4,8 @@
  */
 import { z } from "zod";
 import { BOARD_LENGTHS, CATEGORY_IDS, QUESTION_TIMERS } from "./types";
-import { AVATARS, REACTIONS } from "./constants";
+import { REACTIONS } from "./constants";
+import { isValidAvatar } from "./avatar";
 
 const name = z
   .string()
@@ -20,7 +21,8 @@ const roomCode = z
   .regex(/^[A-Z0-9]{6}$/, "Room codes are 6 letters/numbers");
 
 const clientId = z.string().trim().min(8).max(64);
-const avatar = z.enum(AVATARS);
+/** A preset emoji or a self-made face code ("x:CEMH"). */
+const avatar = z.string().max(12).refine(isValidAvatar, "Unknown character");
 
 export const settingsPatchSchema = z
   .object({

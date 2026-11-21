@@ -1,6 +1,8 @@
 "use client";
 import { motion } from "framer-motion";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { parseFace } from "@/shared/avatar";
+import { FaceSvg } from "./Avatar";
 
 type Variant = "brass" | "paper" | "ghost" | "danger";
 
@@ -86,9 +88,10 @@ export function Segmented<T extends string | number>({
 
 /** Round wooden token with a character/crest painted on it. */
 export function Token({ emblem, color, size = 36, active = false, dim = false }: { emblem: string; color?: string; size?: number; active?: boolean; dim?: boolean }) {
+  const face = parseFace(emblem);
   return (
     <span
-      className={`token shrink-0 ${dim ? "opacity-40" : ""}`}
+      className={`token shrink-0 overflow-hidden ${dim ? "opacity-40" : ""}`}
       style={{
         width: size,
         height: size,
@@ -100,7 +103,7 @@ export function Token({ emblem, color, size = 36, active = false, dim = false }:
       }}
       aria-hidden
     >
-      <span style={{ lineHeight: 1 }}>{emblem}</span>
+      {face ? <FaceSvg face={face} size={size * 0.96} /> : <span style={{ lineHeight: 1 }}>{emblem}</span>}
     </span>
   );
 }

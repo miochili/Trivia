@@ -9,6 +9,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Trivia Quest",
+  appleWebApp: { capable: true, title: "Trivia Quest", statusBarStyle: "black-translucent" },
   description: "Roll the dice, travel the map, answer trivia with friends — in English, Español or Deutsch.",
 };
 
@@ -16,6 +17,7 @@ export const viewport: Viewport = {
   themeColor: "#2c190e",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

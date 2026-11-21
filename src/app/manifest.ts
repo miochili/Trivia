@@ -1,0 +1,21 @@
+import type { MetadataRoute } from "next";
+
+export const dynamic = "force-static";
+
+/** "Add to Home Screen" → opens full-screen like an app. Paths are relative so it works under /Trivia/. */
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Trivia Quest",
+    short_name: "Trivia Quest",
+    description: "Roll the dice, travel the map, answer trivia with friends — EN · ES · DE",
+    start_url: "./",
+    scope: "./",
+    display: "standalone",
+    background_color: "#2c190e",
+    theme_color: "#2c190e",
+    icons: [
+      { src: "icon.svg", sizes: "any", type: "image/svg+xml" },
+      { src: "apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  };
+}

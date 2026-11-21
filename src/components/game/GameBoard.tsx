@@ -6,6 +6,7 @@ import type { PublicGameState, Tile } from "@/shared/types";
 import { C, layoutRing, pawnOffset, polar, R_IN, R_MID, R_OUT, THICK, VB, type RingTile } from "@/lib/boardLayout";
 import { useGame } from "@/lib/store";
 import { useT } from "@/lib/i18n";
+import { AvatarInSvg } from "../ui/Avatar";
 
 /**
  * The board: an old parchment chart with a carved wooden ring track. Pawns are
@@ -226,9 +227,7 @@ function PawnToken({ r, color, emblem, hopKey, active }: { r: number; color: str
     <motion.g key={hopKey} initial={hopKey === "s" ? false : { y: -r * 0.8, scale: 1.08 }} animate={{ y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 650, damping: 17 }} filter="url(#tokenShadow)">
       <circle r={r} fill={color} stroke={active ? "#f0d48a" : "#2b1c11"} strokeWidth={active ? 4 : 2.5} />
       <circle r={r * 0.74} fill="#f3e6c6" stroke="#2b1c11" strokeOpacity=".35" strokeWidth="1.5" />
-      <text y={r * 0.33} textAnchor="middle" fontSize={r * 0.95}>
-        {emblem}
-      </text>
+      <AvatarInSvg avatar={emblem} size={r * 1.45} />
     </motion.g>
   );
 }

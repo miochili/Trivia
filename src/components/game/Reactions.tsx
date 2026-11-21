@@ -45,7 +45,7 @@ export function ReactionLayer({ room }: { room: PublicRoomState }) {
 export function ReactionBar() {
   const { t } = useT();
   return (
-    <div role="toolbar" aria-label={t("game.react")} className="fixed bottom-3 left-1/2 z-[46] flex -translate-x-1/2 gap-0.5 rounded-full border border-brass/50 bg-wood-deep/90 px-1.5 py-1 shadow-[0_6px_18px_rgb(0_0_0/.45)] backdrop-blur">
+    <div role="toolbar" aria-label={t("game.react")} className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-1/2 z-[46] flex -translate-x-1/2 gap-0.5 rounded-full border border-brass/50 bg-wood-deep/90 px-1.5 py-1 shadow-[0_6px_18px_rgb(0_0_0/.45)] backdrop-blur">
       {REACTIONS.map((e) => (
         <button key={e} onClick={() => void request(C2S.REACT, { emoji: e })} className="grid h-10 w-10 place-items-center rounded-full text-2xl transition hover:scale-125 hover:bg-white/10 active:scale-95" aria-label={e}>
           {e}

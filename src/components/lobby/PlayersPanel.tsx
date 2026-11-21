@@ -1,7 +1,8 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { AVATARS, MAX_TEAMS } from "@/shared/constants";
+import { MAX_TEAMS } from "@/shared/constants";
+import { CharacterPicker } from "../CharacterPicker";
 import { C2S } from "@/shared/events";
 import type { PublicPlayer, PublicTeam } from "@/shared/types";
 import { useRoom } from "@/lib/useRoom";
@@ -44,22 +45,16 @@ function CharacterChanger() {
   return (
     <div className="mt-5">
       <p className="text-[15px] font-bold text-ink-soft">{t("lobby.yourCharacter")}</p>
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {AVATARS.map((a) => (
-          <button
-            key={a}
-            disabled={taken.has(a)}
-            aria-pressed={a === me.avatar}
-            title={taken.has(a) ? t("lobby.taken") : undefined}
-            onClick={() => {
-              saveAvatar(a);
-              void act(C2S.SET_AVATAR, { avatar: a });
-            }}
-            className="rounded-full transition enabled:hover:scale-105 disabled:cursor-not-allowed"
-          >
-            <Token emblem={a} size={30} active={a === me.avatar} dim={taken.has(a)} />
-          </button>
-        ))}
+      <div className="mt-2">
+        <CharacterPicker
+          value={me.avatar}
+          taken={[...taken]}
+          size={30}
+          onChange={(a) => {
+            saveAvatar(a);
+            void act(C2S.SET_AVATAR, { avatar: a });
+          }}
+        />
       </div>
     </div>
   );

@@ -117,6 +117,17 @@ body {
     0 3px 6px rgb(0 0 0 / 0.35);
 }
 
+/* Phones: no double-tap zoom delay on controls, no grey tap flash */
+button,
+a,
+[role="radio"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+input {
+  font-size: max(16px, 1em); /* stops iOS from zooming into inputs */
+}
+
 :focus-visible {
   outline: 3px solid var(--color-brass-light);
   outline-offset: 2px;

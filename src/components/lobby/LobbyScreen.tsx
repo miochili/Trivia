@@ -76,7 +76,7 @@ export function LobbyScreen({ onLeave }: { onLeave: () => void }) {
         <SettingsPanel />
       </div>
 
-      <footer className="fixed inset-x-0 bottom-0 z-20 border-t-2 border-brass-dark bg-wood-deep/95 px-4 py-3 shadow-[0_-8px_24px_rgb(0_0_0/.5)] backdrop-blur">
+      <footer className="fixed inset-x-0 bottom-0 z-20 border-t-2 border-brass-dark bg-wood-deep/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgb(0_0_0/.5)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <p className="text-lg text-vellum/85" role="status">
             {error ? <span className="text-[#f1a08f]">{error}</span> : isHost ? (startProblem ?? t("lobby.allReady")) : me?.ready ? t("lobby.youReady") : t("lobby.markReady")}

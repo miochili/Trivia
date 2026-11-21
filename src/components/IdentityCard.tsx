@@ -1,7 +1,7 @@
 "use client";
-import { AVATARS } from "@/shared/constants";
 import { useT } from "@/lib/i18n";
 import { Token } from "./ui/primitives";
+import { CharacterPicker } from "./CharacterPicker";
 
 /** Name + little character picker. Remembered between visits, so returning is one tap. */
 export function IdentityCard({
@@ -43,24 +43,8 @@ export function IdentityCard({
         />
       </div>
       <p className="mt-4 text-[15px] font-bold text-ink-soft">{t("identity.character")}</p>
-      <div role="radiogroup" aria-label={t("identity.character")} className="mt-2 grid grid-cols-8 gap-1.5">
-        {AVATARS.map((a) => {
-          const isTaken = taken.includes(a) && a !== avatar;
-          const on = a === avatar;
-          return (
-            <button
-              key={a}
-              role="radio"
-              aria-checked={on}
-              disabled={isTaken}
-              onClick={() => setAvatar(a)}
-              className={`grid aspect-square place-items-center rounded-full transition ${on ? "scale-110" : "enabled:hover:scale-105"} disabled:cursor-not-allowed`}
-              title={isTaken ? t("lobby.taken") : undefined}
-            >
-              <Token emblem={a} size={34} active={on} dim={isTaken} />
-            </button>
-          );
-        })}
+      <div className="mt-2">
+        <CharacterPicker value={avatar} onChange={setAvatar} taken={taken} />
       </div>
     </div>
   );

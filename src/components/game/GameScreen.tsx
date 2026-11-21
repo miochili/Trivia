@@ -13,15 +13,18 @@ import { GameBoard } from "./GameBoard";
 import { GameOverModal } from "./GameOverModal";
 import { TriviaModal } from "./TriviaModal";
 import { ReactionBar, ReactionLayer } from "./Reactions";
+import { TrackStrip } from "./TrackStrip";
+import { useDeviceNiceties } from "@/lib/useDeviceNiceties";
 
 export function GameScreen() {
   const room = useGame((s) => s.state)!;
   const game = room.game!;
   const { t } = useT();
+  useDeviceNiceties(t("game.yourTurn"));
 
   return (
-    <main className="mx-auto max-w-[1440px] px-2 pb-24 pt-3 md:px-6">
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
+    <main className="mx-auto max-w-[1440px] px-1.5 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-3 md:px-6">
+      <header className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-1">
         <div className="flex items-baseline gap-4">
           <h1 className="font-display text-3xl text-vellum drop-shadow-[0_2px_0_rgb(0_0_0/.5)]">{t("app.title")}</h1>
           <span className="text-lg text-vellum/60">{t("game.turn", { n: game.turnNumber })}</span>
@@ -35,6 +38,9 @@ export function GameScreen() {
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_350px]">
         <div>
           <GameBoard game={game} loopMode={room.settings.winCondition === "trophies"} center={<BoardCenter room={room} game={game} />} />
+          <div className="lg:hidden">
+            <TrackStrip game={game} loopMode={room.settings.winCondition === "trophies"} />
+          </div>
           <Legend room={room} />
         </div>
         <aside className="flex flex-col gap-5">
