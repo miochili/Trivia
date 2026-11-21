@@ -113,7 +113,7 @@ export class GameEngine {
     this.rng = deps.rng ?? Math.random;
     this.rollDie = deps.rollDie ?? (() => secureInt(6) + 1);
     this.loopMode = deps.settings.winCondition === "trophies";
-    this.board = deps.board ?? generateBoard(deps.settings.boardLength, deps.settings.categories, this.rng);
+    this.board = deps.board ?? generateBoard(deps.settings.boardLength + 1, deps.settings.categories, this.rng) // tiles 0…N, Finish = N;
     const ordered = deps.fixedOrder ? deps.sides : shuffle(deps.sides, this.rng);
     this.sides = ordered.map((s) => ({
       id: s.id,

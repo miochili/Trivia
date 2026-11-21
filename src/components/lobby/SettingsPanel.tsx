@@ -21,7 +21,7 @@ export function SettingsPanel() {
     <section className="parchment p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-display text-3xl">{t("settings.title")}</h2>
-        {!isHost && <span className="font-fell italic text-ink-soft">{t("settings.hostOnly")}</span>}
+        {!isHost && <span className="text-ink-soft">{t("settings.hostOnly")}</span>}
       </div>
 
       <div className="ink-rule mt-2" />
@@ -47,8 +47,8 @@ export function SettingsPanel() {
             onChange={(boardLength) => set({ boardLength })}
             options={[
               { value: 30, label: t("settings.tiles", { n: 30 }) },
-              { value: 45, label: t("settings.tiles", { n: 45 }) },
-              { value: 60, label: t("settings.tiles", { n: 60 }) },
+              { value: 50, label: t("settings.tiles", { n: 50 }) },
+              { value: 70, label: t("settings.tiles", { n: 70 }) },
             ]}
           />
         </Field>
@@ -126,7 +126,7 @@ export function SettingsPanel() {
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1.5 font-fell text-lg text-ink">{label}</p>
+      <p className="mb-1.5 text-lg text-ink">{label}</p>
       {children}
       {hint && <p className="mt-1 text-sm italic text-ink-soft">{hint}</p>}
     </div>

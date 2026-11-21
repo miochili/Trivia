@@ -90,7 +90,7 @@ describe("socket protocol end-to-end", () => {
     expect(await call(host, C2S.START_GAME)).toMatchObject({ ok: true });
     await until(() => hostState()?.status === "playing" && guestState()?.status === "playing");
     const g = hostState().game!;
-    expect(g.board.length).toBe(30);
+    expect(g.board.length).toBe(51); // Finish is tile 50
     const activeId = g.activePlayerId!;
     const active = activeId === created.playerId ? host : guest;
     const idle = active === host ? guest : host;

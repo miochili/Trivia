@@ -51,7 +51,7 @@ export function LobbyScreen({ onLeave }: { onLeave: () => void }) {
         <h1 className="font-display text-3xl text-vellum drop-shadow-[0_2px_0_rgb(0_0_0/.5)]">{t("app.title")}</h1>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          <Button variant="ghost" onClick={leave} className="font-fell">
+          <Button variant="ghost" onClick={leave}>
             {t("lobby.leave")}
           </Button>
         </div>
@@ -59,17 +59,17 @@ export function LobbyScreen({ onLeave }: { onLeave: () => void }) {
 
       <section className="parchment mt-5 flex flex-col items-center gap-4 p-5 text-center md:flex-row md:justify-between md:text-left">
         <div>
-          <p className="font-fell text-lg italic text-ink-soft">{t("lobby.shareCode")}</p>
+          <p className="text-lg italic text-ink-soft">{t("lobby.shareCode")}</p>
           <div className="mt-2">
             <CodeTiles code={state.code} size="lg" label={t("room.codeLabel", { code: state.code })} />
           </div>
-          <p className="mt-2 break-all font-fell text-ink-soft">{link.replace(/^https?:\/\//, "")}</p>
+          <p className="mt-2 break-all text-ink-soft">{link.replace(/^https?:\/\//, "")}</p>
         </div>
         <Button variant="brass" className="px-6 py-3 font-display text-lg" onClick={share}>
           {copied ? t("lobby.copied") : t("lobby.copyInvite")}
         </Button>
       </section>
-      {hosting && <p className="mt-3 text-center font-fell italic text-brass-light">{t("room.hosting")}</p>}
+      {hosting && <p className="mt-3 text-center text-brass-light">{t("room.hosting")}</p>}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_1fr]">
         <PlayersPanel />
@@ -78,7 +78,7 @@ export function LobbyScreen({ onLeave }: { onLeave: () => void }) {
 
       <footer className="fixed inset-x-0 bottom-0 z-20 border-t-2 border-brass-dark bg-wood-deep/95 px-4 py-3 shadow-[0_-8px_24px_rgb(0_0_0/.5)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <p className="font-fell text-lg text-vellum/85" role="status">
+          <p className="text-lg text-vellum/85" role="status">
             {error ? <span className="text-[#f1a08f]">{error}</span> : isHost ? (startProblem ?? t("lobby.allReady")) : me?.ready ? t("lobby.youReady") : t("lobby.markReady")}
           </p>
           {isHost ? (

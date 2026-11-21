@@ -16,7 +16,7 @@ export function PlayersPanel() {
     <section className="parchment p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-display text-3xl">{teams ? t("lobby.teams") : t("lobby.players")}</h2>
-        <span className="font-fell text-ink-soft">{t("lobby.seats", { n: state.players.length, max: state.settings.maxPlayers })}</span>
+        <span className="text-ink-soft">{t("lobby.seats", { n: state.players.length, max: state.settings.maxPlayers })}</span>
       </div>
       <div className="ink-rule mt-2" />
 
@@ -71,7 +71,7 @@ function PlayerRow({ p, canKick, onKick }: { p: PublicPlayer; canKick: boolean; 
     <motion.li layout className="flex items-center gap-3 rounded-lg border border-ink/15 bg-vellum/60 px-3 py-2">
       <Token emblem={p.avatar} color={p.color} size={38} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-fell text-xl leading-tight">
+        <span className="block truncate text-xl leading-tight">
           {p.name}
           {p.id === me?.id && <span className="text-base text-ink-soft"> {t("lobby.you")}</span>}
         </span>
@@ -112,10 +112,10 @@ function TeamsBoard() {
 
       {unassigned.length > 0 && (
         <div className="mt-3 rounded-lg border border-dashed border-ink/30 p-3">
-          <p className="font-fell italic text-ink-soft">{t("lobby.unassigned")}</p>
+          <p className="text-ink-soft">{t("lobby.unassigned")}</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {unassigned.map((p) => (
-              <li key={p.id} className="flex items-center gap-1.5 font-fell text-lg">
+              <li key={p.id} className="flex items-center gap-1.5 text-lg">
                 <Token emblem={p.avatar} color={p.color} size={26} /> {p.name}
               </li>
             ))}
@@ -140,7 +140,7 @@ function TeamsBoard() {
               maxLength={24}
               placeholder={t("lobby.newTeam")}
               aria-label={t("lobby.newTeam")}
-              className="min-w-0 flex-1 border-b-2 border-ink/40 bg-transparent px-1 py-1.5 font-fell text-lg outline-none placeholder:text-ink/40 focus:border-ink"
+              className="min-w-0 flex-1 border-b-2 border-ink/40 bg-transparent px-1 py-1.5 text-lg outline-none placeholder:text-ink/40 focus:border-ink"
             />
             <Button type="submit">{t("lobby.createJoin")}</Button>
           </form>
@@ -213,7 +213,7 @@ function TeamBanner({ team }: { team: PublicTeam }) {
         {members.map((p) => (
           <li key={p.id} className="flex items-center gap-2">
             <Token emblem={p.avatar} size={26} dim={!p.connected} />
-            <span className="truncate font-fell text-lg">{p.name}</span>
+            <span className="truncate text-lg">{p.name}</span>
             {p.id === me?.id && <span className="text-ink-soft">{t("lobby.you")}</span>}
             {p.isHost && <span className="text-sm text-brass-dark">♛</span>}
             <span className={`ml-auto text-sm ${p.ready ? "text-moss" : "text-ink-soft"}`}>{p.ready ? "✓" : "…"}</span>
@@ -224,7 +224,7 @@ function TeamBanner({ team }: { team: PublicTeam }) {
             )}
           </li>
         ))}
-        {!members.length && <li className="font-fell italic text-ink-soft">{t("lobby.emptyTeam")}</li>}
+        {!members.length && <li className="text-ink-soft">{t("lobby.emptyTeam")}</li>}
       </ul>
       {!mine && (
         <div className="px-3 pb-3">

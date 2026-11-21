@@ -43,7 +43,7 @@ export function GameOverModal({ room, game }: { room: PublicRoomState; game: Pub
               {t("over.wins", { side: winner.name })}
             </h2>
             <Flourish className="mx-auto mt-1 text-ink-soft" />
-            <p className="mt-1 font-fell text-lg italic text-ink-soft">{t(game.winReason === "trophies" ? "over.reasonTrophies" : "over.reasonFinish")}</p>
+            <p className="mt-1 text-lg italic text-ink-soft">{t(game.winReason === "trophies" ? "over.reasonTrophies" : "over.reasonFinish")}</p>
 
             <h3 className="mt-6 text-left font-display text-xl">{t("over.standings")}</h3>
             <ol className="mt-2 space-y-1.5 text-left">
@@ -51,7 +51,7 @@ export function GameOverModal({ room, game }: { room: PublicRoomState; game: Pub
                 <li key={s.id} className="flex items-center gap-3 rounded-lg border border-ink/15 bg-vellum/60 px-3 py-2">
                   <span className="w-5 font-display text-xl text-ink-soft">{i + 1}</span>
                   <Token emblem={s.emblem} color={s.color} size={28} />
-                  <span className="min-w-0 flex-1 truncate font-fell text-xl">{s.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-xl">{s.name}</span>
                   <span className="text-xs">{s.trophies.length ? "🏆".repeat(s.trophies.length) : ""}</span>
                   <span className="font-display tabular-nums">{t("game.points", { n: s.score })}</span>
                 </li>
@@ -63,7 +63,7 @@ export function GameOverModal({ room, game }: { room: PublicRoomState; game: Pub
                 {t("over.backToLobby")}
               </Button>
             ) : (
-              <p className="mt-6 font-fell italic text-ink-soft">{t("over.waitingHost")}</p>
+              <p className="mt-6 text-ink-soft">{t("over.waitingHost")}</p>
             )}
           </motion.div>
         </motion.div>

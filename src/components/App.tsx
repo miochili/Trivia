@@ -15,7 +15,7 @@ import { getTransport, hub, joinAsGuest, LOCAL, MODE, request, setTransport, sta
 import { GameScreen } from "./game/GameScreen";
 import { IdentityCard } from "./IdentityCard";
 import { LobbyScreen } from "./lobby/LobbyScreen";
-import { Button, CodeTiles, Flourish } from "./ui/primitives";
+import { Button, CodeTiles } from "./ui/primitives";
 import { LanguageSwitcher } from "./ui/LanguageSwitcher";
 
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -71,7 +71,12 @@ function Home({ go }: { go: (c: string | null) => void }) {
   const [joinCode, setJoinCode] = useState("");
   const [busy, setBusy] = useState<"create" | "join" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const codeRef = useRef<HTMLInputElement>(null);
+
+  /** Accepts "kobali", "KOBALI" or a pasted invite link ".../KOBALI". */
+  const onCode = (raw: string) => {
+    const fromLink = raw.match(/([A-Za-z]{6})\/?(?:\?.*)?$/)?.[1];
+    setJoinCode((raw.length > 6 && fromLink ? fromLink : raw).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 6));
+  };
 
   async function create() {
     setError(null);
@@ -106,62 +111,50 @@ function Home({ go }: { go: (c: string | null) => void }) {
   }
 
   return (
-    <main className="relative mx-auto flex min-h-dvh max-w-5xl flex-col items-center justify-center gap-8 px-4 py-16 md:flex-row md:items-center md:gap-14">
+    <main className="relative mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-16">
       <LanguageSwitcher className="absolute right-4 top-4" />
-      <section className="max-w-md text-center md:text-left">
+      <header className="text-center">
         <CompassMark />
-        <h1 className="mt-4 font-display text-6xl leading-[0.95] text-vellum drop-shadow-[0_3px_0_rgb(0_0_0/.5)] md:text-7xl">{t("app.title")}</h1>
-        <Flourish className="mx-auto mt-3 text-brass-light md:mx-0" />
-        <p className="mt-4 font-fell text-xl leading-relaxed text-vellum/85">{t("app.tagline")}</p>
-      </section>
+        <h1 className="mt-3 font-display text-5xl text-vellum">{t("app.title")}</h1>
+        <p className="mt-2 text-lg text-vellum/75">{t("app.tagline")}</p>
+      </header>
 
-      <section className="parchment w-full max-w-sm p-6">
-        <IdentityCard name={id.name} setName={id.setName} avatar={id.avatar} setAvatar={id.setAvatar} onEnter={create} />
+      <section className="parchment mt-8 p-6">
+        <IdentityCard name={id.name} setName={id.setName} avatar={id.avatar} setAvatar={id.setAvatar} onEnter={() => (joinCode.length === 6 ? join() : create())} />
 
-        <Button variant="brass" className="mt-6 w-full py-3.5 font-display text-xl" disabled={!!busy} onClick={create}>
-          {busy === "create" ? t("home.creating") : t("home.create")}
-        </Button>
+        <div className="ink-rule my-6" />
 
-        <div className="my-5 flex items-center gap-3 font-fell italic text-ink-soft">
-          <span className="ink-rule flex-1" />
-          {t("home.orJoin")}
-          <span className="ink-rule flex-1" />
-        </div>
-
-        <label className="block text-[15px] font-bold text-ink-soft" htmlFor="code">
-          {t("home.code")}
-        </label>
-        <div className="relative mt-1.5" onClick={() => codeRef.current?.focus()}>
+        <h2 className="font-display text-xl">{t("home.joinTitle")}</h2>
+        <p className="mt-0.5 text-[15px] text-ink-soft">{t("home.joinHint")}</p>
+        <div className="mt-3 flex gap-2">
           <input
             id="code"
-            ref={codeRef}
             value={joinCode}
+            onChange={(e) => onCode(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && join()}
+            inputMode="text"
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
-            onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 6))}
-            onKeyDown={(e) => e.key === "Enter" && join()}
-            className="absolute inset-0 opacity-0"
-            aria-describedby="code-help"
+            placeholder="KOBALI"
+            aria-label={t("home.code")}
+            className="w-0 min-w-0 flex-1 rounded-lg border-2 border-ink/25 bg-vellum px-2 py-2.5 text-center font-display text-xl tracking-[0.2em] text-ink outline-none placeholder:text-ink/20 focus:border-brass sm:text-2xl"
           />
-          <div className="flex justify-between gap-1.5" aria-hidden>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <span
-                key={i}
-                className={`grid h-12 flex-1 place-items-center rounded-md font-display text-3xl ${joinCode[i] ? "letter-tile" : "border-2 border-dashed border-ink/30 text-transparent"} ${
-                  i === joinCode.length ? "ring-2 ring-brass" : ""
-                }`}
-              >
-                {joinCode[i] ?? "·"}
-              </span>
-            ))}
-          </div>
+          <Button variant="brass" className="shrink-0 px-4 font-display text-lg" disabled={!!busy || joinCode.length !== 6} onClick={join}>
+            {t("home.join")}
+          </Button>
         </div>
-        <p id="code-help" className="mt-1.5 text-sm text-ink-soft/80">
-          {t("home.codeHelp")}
-        </p>
-        <Button className="mt-4 w-full font-display text-lg" disabled={!!busy || joinCode.length !== 6} onClick={join}>
-          {t("home.join")}
+
+        <div className="my-6 flex items-center gap-3 text-ink-soft">
+          <span className="ink-rule flex-1" />
+          {t("home.or")}
+          <span className="ink-rule flex-1" />
+        </div>
+
+        <h2 className="font-display text-xl">{t("home.createTitle")}</h2>
+        <p className="mt-0.5 text-[15px] text-ink-soft">{t("home.createHint")}</p>
+        <Button className="mt-3 w-full py-3 font-display text-lg" disabled={!!busy} onClick={create}>
+          {busy === "create" ? t("home.creating") : t("home.create")}
         </Button>
 
         {error && (
@@ -176,7 +169,7 @@ function Home({ go }: { go: (c: string | null) => void }) {
 
 function CompassMark() {
   return (
-    <svg viewBox="0 0 100 100" className="mx-auto h-20 w-20 text-brass-light md:mx-0" aria-hidden>
+    <svg viewBox="0 0 100 100" className="mx-auto h-14 w-14 text-brass-light" aria-hidden>
       <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="2" />
       <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="2 4" />
       <path d="M50 6 L57 50 L50 94 L43 50 Z" fill="currentColor" />
@@ -310,7 +303,7 @@ function RoomView({ code, go }: { code: string; go: (c: string | null) => void }
     return (
       <Centered>
         <div className="parchment max-w-sm p-6 text-center">
-          <p className="font-fell text-xl">{t(notice)}</p>
+          <p className="text-xl">{t(notice)}</p>
           <Button variant="brass" className="mt-5 font-display text-lg" onClick={leaveHome}>
             {t("room.back")}
           </Button>
@@ -360,7 +353,7 @@ function RoomView({ code, go }: { code: string; go: (c: string | null) => void }
               {error}
             </p>
           )}
-          <button onClick={leaveHome} className="mt-5 block w-full text-center font-fell text-ink-soft underline">
+          <button onClick={leaveHome} className="mt-5 block w-full text-center text-ink-soft underline">
             {t("room.otherRoom")}
           </button>
         </div>
@@ -371,7 +364,7 @@ function RoomView({ code, go }: { code: string; go: (c: string | null) => void }
   return (
     <Centered>
       <CodeTiles code={code} />
-      <p className="mt-4 font-fell text-lg text-vellum/80">{t("room.connecting")}</p>
+      <p className="mt-4 text-lg text-vellum/80">{t("room.connecting")}</p>
     </Centered>
   );
 }

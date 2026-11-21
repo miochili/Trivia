@@ -25,7 +25,7 @@ const avatar = z.enum(AVATARS);
 export const settingsPatchSchema = z
   .object({
     mode: z.enum(["ffa", "teams"]),
-    boardLength: z.union(BOARD_LENGTHS.map((n) => z.literal(n)) as [z.ZodLiteral<30>, z.ZodLiteral<45>, z.ZodLiteral<60>]),
+    boardLength: z.union(BOARD_LENGTHS.map((n) => z.literal(n)) as [z.ZodLiteral<30>, z.ZodLiteral<50>, z.ZodLiteral<70>]),
     questionTimerSec: z.union(
       QUESTION_TIMERS.map((n) => z.literal(n)) as [z.ZodLiteral<15>, z.ZodLiteral<30>, z.ZodLiteral<45>],
     ),

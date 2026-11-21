@@ -33,7 +33,7 @@ export function CodeTiles({ code, size = "md", label }: { code: string; size?: "
   return (
     <span className="inline-flex gap-1" role="img" aria-label={label ?? code.split("").join(" ")}>
       {code.split("").map((ch, i) => (
-        <span key={i} aria-hidden className={`letter-tile grid place-items-center font-display leading-none ${dims}`} style={{ rotate: `${((i * 37) % 5) - 2}deg` }}>
+        <span key={i} aria-hidden className={`letter-tile grid place-items-center font-display leading-none ${dims}`}>
           {ch}
         </span>
       ))}

@@ -94,7 +94,7 @@ export function TriviaModal({ room, game }: { room: PublicRoomState; game: Publi
                 <p className="font-display text-2xl leading-none" style={{ color: `color-mix(in srgb, ${meta.color} 75%, black)` }}>
                   {t(`cat.${aq.question.category}`)}
                 </p>
-                <p className="mt-1 font-fell text-ink-soft">
+                <p className="mt-1 text-ink-soft">
                   {t("trivia.points", { diff: t(`diff.${aq.question.difficulty}`), n: POINTS[aq.question.difficulty] * (aq.doublePoints ? 2 : 1) })}
                   {aq.doublePoints && ` ${t("trivia.doubled")}`}
                   {aq.hq && ` — ${t("trivia.trophyTile")} 🏆`}
@@ -104,7 +104,7 @@ export function TriviaModal({ room, game }: { room: PublicRoomState; game: Publi
             </div>
 
             <div className="ink-rule mt-3" />
-            <p className="mt-3 flex items-center gap-2 font-fell italic text-ink-soft">
+            <p className="mt-3 flex items-center gap-2 text-ink-soft">
               {answerer && <Token emblem={answerer.avatar} color={answerer.color} size={22} />}
               {canAnswer
                 ? t("trivia.yourQuestion")
@@ -164,7 +164,7 @@ export function TriviaModal({ room, game }: { room: PublicRoomState; game: Publi
               })}
             </ul>
 
-            <div className="mt-5 min-h-7 text-center font-fell text-xl" role="status">
+            <div className="mt-5 min-h-7 text-center text-xl" role="status">
               {reveal ? (
                 reveal.correct ? (
                   <span className="font-bold text-moss">

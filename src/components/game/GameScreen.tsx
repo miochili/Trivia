@@ -23,7 +23,7 @@ export function GameScreen() {
       <header className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
         <div className="flex items-baseline gap-4">
           <h1 className="font-display text-3xl text-vellum drop-shadow-[0_2px_0_rgb(0_0_0/.5)]">{t("app.title")}</h1>
-          <span className="font-fell text-lg italic text-brass-light">{t("game.turn", { n: game.turnNumber })}</span>
+          <span className="text-lg text-vellum/60">{t("game.turn", { n: game.turnNumber })}</span>
         </div>
         <div className="flex items-center gap-3">
           <CodeTiles code={room.code} size="sm" label={t("room.codeLabel", { code: room.code })} />
@@ -95,14 +95,14 @@ function BoardCenter({ room, game }: { room: PublicRoomState; game: PublicGameSt
         <span className="max-w-[12em] truncate font-display text-[clamp(15px,2.3vw,26px)] leading-none">{side.name}</span>
       </div>
       {team && active && (
-        <p className="flex items-center gap-1.5 font-fell text-[clamp(12px,1.5vw,16px)] italic text-ink-soft">
+        <p className="flex items-center gap-1.5 text-[clamp(12px,1.5vw,16px)] italic text-ink-soft">
           <Token emblem={active.avatar} size={18} /> {t("game.playsFor", { name: active.name, side: side.name })}
         </p>
       )}
       <div className="scale-[0.72] sm:scale-100">
         <Dice value={dice?.value ?? game.lastRoll} rollId={dice?.rollId ?? 0} size={72} />
       </div>
-      <p className="max-w-[22em] font-fell text-[clamp(13px,1.7vw,19px)] leading-snug">{status}</p>
+      <p className="max-w-[22em] text-[clamp(13px,1.7vw,19px)] leading-snug">{status}</p>
       {myTurn && (
         <Button variant="brass" className="px-6 py-2 font-display text-[clamp(16px,2.2vw,24px)]" onClick={roll} disabled={busy}>
           {t("game.roll")}
@@ -131,7 +131,7 @@ function Scoreboard({ room, game }: { room: PublicRoomState; game: PublicGameSta
             <li key={s.id} className={`rounded-lg border-2 px-3 py-2.5 transition ${current ? "border-brass bg-brass-light/25" : "border-ink/15 bg-vellum/50"}`}>
               <div className="flex items-center gap-2.5">
                 <Token emblem={s.emblem} color={s.color} size={34} active={current} />
-                <span className="min-w-0 flex-1 truncate font-fell text-xl leading-tight">
+                <span className="min-w-0 flex-1 truncate text-xl leading-tight">
                   {s.name}
                   {mine && <span className="text-base text-ink-soft"> {t("lobby.you")}</span>}
                 </span>
@@ -159,7 +159,7 @@ function Scoreboard({ room, game }: { room: PublicRoomState; game: PublicGameSta
                   {members.map((m) => {
                     const up = m.id === game.activePlayerId && current;
                     return (
-                      <span key={m.id} className={`flex items-center gap-1 font-fell ${up ? "font-bold text-ink" : "text-ink-soft"} ${m.connected ? "" : "line-through opacity-60"}`}>
+                      <span key={m.id} className={`flex items-center gap-1 ${up ? "font-bold text-ink" : "text-ink-soft"} ${m.connected ? "" : "line-through opacity-60"}`}>
                         <Token emblem={m.avatar} size={20} active={up} dim={!m.connected} />
                         {m.name}
                       </span>
@@ -178,13 +178,13 @@ function Scoreboard({ room, game }: { room: PublicRoomState; game: PublicGameSta
 
 function Log({ game }: { game: PublicGameState }) {
   const { t } = useT();
-  const entries = game.log.slice(-8).reverse();
+  const entries = game.log.slice(-6).reverse();
   const tone = { good: "text-moss", bad: "text-rust", special: "text-brass-dark", info: "text-ink" } as const;
   return (
     <section className="parchment p-4">
       <h2 className="font-display text-2xl">{t("game.log")}</h2>
       <div className="ink-rule mt-1.5" />
-      <ul className="mt-2 space-y-1.5 font-fell text-[17px] leading-snug">
+      <ul className="mt-2 space-y-1.5 text-[17px] leading-snug">
         {entries.map((e, i) => (
           <li key={e.id} className={`${tone[e.tone ?? "info"]} ${i > 3 ? "opacity-70" : ""}`}>
             {t(e.key, e.params)}
@@ -198,7 +198,7 @@ function Log({ game }: { game: PublicGameState }) {
 function Legend({ room }: { room: PublicRoomState }) {
   const { t } = useT();
   return (
-    <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 font-fell text-[17px] text-vellum/90">
+    <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[17px] text-vellum/90">
       {room.settings.categories.map((c) => (
         <li key={c} className="flex items-center gap-1.5">
           <span className="h-3.5 w-3.5 rounded-sm border border-black/40" style={{ background: CATEGORY_META[c].color }} />

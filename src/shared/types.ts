@@ -15,7 +15,8 @@ export type CorrectAnswerRule = "stay" | "bonus_move" | "roll_again";
 export type SpecialTileType = "roll_again" | "swap" | "lose_turn" | "double_points";
 export type TileKind = "start" | "finish" | "category" | "special";
 
-export const BOARD_LENGTHS = [30, 45, 60] as const;
+/** Number of steps from Start to Finish (the Finish tile is tile N). */
+export const BOARD_LENGTHS = [30, 50, 70] as const;
 export const QUESTION_TIMERS = [15, 30, 45] as const;
 
 export interface Tile {
@@ -39,7 +40,7 @@ export interface GameSettings {
 
 export const DEFAULT_SETTINGS: GameSettings = {
   mode: "ffa",
-  boardLength: 30,
+  boardLength: 50,
   questionTimerSec: 30,
   categories: [...CATEGORY_IDS],
   winCondition: "either",

@@ -39,7 +39,7 @@ export function IdentityCard({
           onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
           placeholder={t("home.namePlaceholder")}
           aria-label={t("home.name")}
-          className="min-w-0 flex-1 border-b-2 border-ink/50 bg-transparent px-1 py-2 font-fell text-2xl text-ink outline-none placeholder:text-ink/35 focus:border-ink"
+          className="min-w-0 flex-1 border-b-2 border-ink/50 bg-transparent px-1 py-2 text-2xl text-ink outline-none placeholder:text-ink/35 focus:border-ink"
         />
       </div>
       <p className="mt-4 text-[15px] font-bold text-ink-soft">{t("identity.character")}</p>
