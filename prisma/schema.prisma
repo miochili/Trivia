@@ -1,0 +1,169 @@
+// Trivia Quest — persistent data model (PostgreSQL, Prisma 7)
+//
+// Live game state (dice, turn, positions, active question) is authoritative IN MEMORY
+// on the realtime server for low latency. The database stores what must outlive a
+// process: user profiles & stats, room/lobby records, team results, the question
+// bank, and an answer log for analytics / anti-cheat review.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Users ─────────────────────────────
+
+/// A player profile. Guests are created automatically from a client-generated
+/// `guestKey` (stored in localStorage); `email` is reserved for real auth later.
+model User {
+  id             String       @id @default(cuid())
+  guestKey       String       @unique
+  displayName    String
+  email          String?      @unique
+  gamesPlayed    Int          @default(0)
+  gamesWon       Int          @default(0)
+  correctAnswers Int          @default(0)
+  totalAnswers   Int          @default(0)
+  trophiesWon    Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  memberships    RoomPlayer[]
+  answers        AnswerLog[]
+  hostedRooms    Room[]       @relation("RoomHost")
+}
+
+// ───────────────────────────── Rooms ─────────────────────────────
+
+enum RoomStatus {
+  LOBBY
+  PLAYING
+  FINISHED
+  ABANDONED
+}
+
+enum GameMode {
+  FFA
+  TEAMS
+}
+
+/// One lobby / match. `code` is the 6-char join code shown to players.
+/// `settings` holds the host's GameSettings JSON (board length, timer, categories…).
+model Room {
+  id           String       @id @default(cuid())
+  code         String       @unique
+  status       RoomStatus   @default(LOBBY)
+  mode         GameMode     @default(FFA)
+  settings     Json
+  hostId       String?
+  host         User?        @relation("RoomHost", fields: [hostId], references: [id], onDelete: SetNull)
+  winnerTeamId String?      @unique
+  winnerTeam   Team?        @relation("RoomWinner", fields: [winnerTeamId], references: [id], onDelete: SetNull)
+  winReason    String?
+  turnCount    Int          @default(0)
+  createdAt    DateTime     @default(now())
+  startedAt    DateTime?
+  endedAt      DateTime?
+  players      RoomPlayer[]
+  teams        Team[]       @relation("RoomTeams")
+  answers      AnswerLog[]
+
+  @@index([status, createdAt])
+}
+
+/// A "side" on the board. In Team mode this is a real team; in Free-for-All each
+/// player gets a one-member Team row so stats & results share one shape.
+model Team {
+  id        String       @id @default(cuid())
+  roomId    String
+  room      Room         @relation("RoomTeams", fields: [roomId], references: [id], onDelete: Cascade)
+  name      String
+  color     String
+  position  Int          @default(0)
+  score     Int          @default(0)
+  trophies  String[]     @default([])
+  placement Int?
+  members   RoomPlayer[]
+  wonRoom   Room?        @relation("RoomWinner")
+
+  @@index([roomId])
+}
+
+/// Membership of a user in a room. The reconnect session token is stored hashed.
+model RoomPlayer {
+  id               String    @id @default(cuid())
+  roomId           String
+  room             Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId           String?
+  team             Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  displayName      String
+  isHost           Boolean   @default(false)
+  sessionTokenHash String
+  joinedAt         DateTime  @default(now())
+  leftAt           DateTime?
+
+  @@unique([roomId, userId])
+  @@index([sessionTokenHash])
+}
+
+// ─────────────────────────── Questions ───────────────────────────
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Category {
+  id        String     @id // slug: "history", "science", …
+  name      String
+  color     String
+  icon      String
+  questions Question[]
+}
+
+/// The correct answer lives ONLY here and in server memory. Clients receive
+/// shuffled options without `correctIndex` and submit an option index.
+model Question {
+  id           String      @id @default(cuid())
+  categoryId   String
+  category     Category    @relation(fields: [categoryId], references: [id])
+  difficulty   Difficulty
+  text         String
+  /// English base text/options (fallback language).
+  options      String[]
+  correctIndex Int
+  /// { "es": { "text": "...", "options": [...] }, "de": {...} } — options in the same order as `options`.
+  translations Json?
+  explanation  String?
+  active       Boolean     @default(true)
+  timesAsked   Int         @default(0)
+  timesCorrect Int         @default(0)
+  createdAt    DateTime    @default(now())
+  answers      AnswerLog[]
+
+  @@unique([categoryId, text])
+  @@index([categoryId, difficulty, active])
+}
+
+/// Every resolved answer (incl. timeouts) — stats, difficulty tuning, cheat review.
+model AnswerLog {
+  id          String   @id @default(cuid())
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  correct     Boolean
+  timedOut    Boolean  @default(false)
+  responseMs  Int
+  createdAt   DateTime @default(now())
+
+  @@index([roomId])
+  @@index([questionId])
+}

@@ -1,0 +1,17 @@
+# One-click hosting on Render (free plan works; supports WebSockets).
+# Dashboard → New → Blueprint → pick this repo. No database needed.
+services:
+  - type: web
+    name: trivia-quest
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      # Optional: add DATABASE_URL (Render Postgres) for stats + DB question bank,
+      # then run `npm run db:push && npm run db:seed` once from the Render shell.
