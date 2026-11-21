@@ -3,6 +3,7 @@ import { S2C, type EngineEvent } from "../../src/shared/events";
 import {
   DEFAULT_SETTINGS,
   type GameSettings,
+  type OpenLobby,
   type PublicRoomState,
   type RoomStatus,
 } from "../../src/shared/types";
@@ -230,6 +231,26 @@ export class Room {
     p.teamId = teamId;
     p.ready = false;
     this.queueBroadcast();
+  }
+
+  /** Host puts any player on any team (or none) — "choose who's with who". */
+  movePlayer(byId: string, targetId: string, teamId: string | null) {
+    this.requireHost(byId);
+    this.requireLobby();
+    this.requireTeamsMode();
+    if (teamId && !this.teams.some((t) => t.id === teamId)) throw new GameError("err.teamNotFound");
+    const p = this.mustGet(targetId);
+    p.teamId = teamId;
+    if (p.id !== this.hostId) p.ready = false;
+    this.queueBroadcast();
+  }
+
+  /** Entry for the "Open games" list, or null when not joinable / private. */
+  toOpenLobby(): OpenLobby | null {
+    const host = this.players.get(this.hostId);
+    if (this.status !== "lobby" || !this.settings.isPublic || !host?.connected) return null;
+    if (this.players.size >= this.settings.maxPlayers) return null;
+    return { code: this.code, host: host.name, hostAvatar: host.avatar, players: this.players.size, max: this.settings.maxPlayers, mode: this.settings.mode, ts: Date.now() };
   }
 
   renameTeam(byId: string, teamId: string, name: string) {

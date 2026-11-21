@@ -36,6 +36,7 @@ export const settingsPatchSchema = z
     correctAnswerRule: z.enum(["stay", "bonus_move", "roll_again"]),
     teamAnswer: z.enum(["vote", "captain"]),
     steals: z.boolean(),
+    isPublic: z.boolean(),
     maxPlayers: z.number().int().min(2).max(16),
   })
   .partial()
@@ -45,6 +46,7 @@ export const schemas = {
   createRoom: z.object({ name, clientId, avatar: avatar.optional(), settings: settingsPatchSchema.optional() }),
   joinRoom: z.object({ roomCode, name, clientId, avatar: avatar.optional() }),
   setAvatar: z.object({ avatar }),
+  movePlayer: z.object({ playerId: z.string().max(40), teamId: z.string().max(40).nullable() }),
   react: z.object({ emoji: z.enum(REACTIONS) }),
   rejoinRoom: z.object({ roomCode, sessionToken: z.string().min(20).max(128) }),
   empty: z.object({}).passthrough(),

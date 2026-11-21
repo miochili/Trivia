@@ -5,6 +5,7 @@ import { C2S } from "@/shared/events";
 import { useRoom } from "@/lib/useRoom";
 import { clearSession } from "@/lib/session";
 import { getTransport } from "@/lib/transport";
+import { useAnnounceLobby } from "@/lib/lobbies";
 import { roomUrl } from "../App";
 import { Button, CodeTiles, Flourish } from "../ui/primitives";
 import { LanguageSwitcher } from "../ui/LanguageSwitcher";
@@ -15,6 +16,7 @@ export function LobbyScreen({ onLeave }: { onLeave: () => void }) {
   const { state, me, isHost, act, error, pending, t } = useRoom();
   const [copied, setCopied] = useState(false);
   const hosting = getTransport()?.kind === "host";
+  useAnnounceLobby(state, isHost);
   const link = roomUrl(state.code);
 
   const present = state.players.filter((p) => p.connected);

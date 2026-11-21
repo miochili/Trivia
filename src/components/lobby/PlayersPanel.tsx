@@ -97,7 +97,8 @@ function TeamsBoard() {
 
   return (
     <div className="mt-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <p className="text-[15px] text-ink-soft">{t("lobby.pickTeams")}</p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <AnimatePresence initial={false}>
           {state.teams.map((tm) => (
             <TeamBanner key={tm.id} team={tm} />
@@ -112,6 +113,7 @@ function TeamsBoard() {
             {unassigned.map((p) => (
               <li key={p.id} className="flex items-center gap-1.5 text-lg">
                 <Token emblem={p.avatar} color={p.color} size={26} /> {p.name}
+                {isHost && <MoveSelect playerId={p.id} name={p.name} current={null} />}
               </li>
             ))}
           </ul>
@@ -148,6 +150,27 @@ function TeamsBoard() {
         )}
       </div>
     </div>
+  );
+}
+
+/** Host control: put a player on any team. */
+function MoveSelect({ playerId, name, current }: { playerId: string; name: string; current: string | null }) {
+  const { state, act, t } = useRoom();
+  return (
+    <select
+      aria-label={t("lobby.moveTo", { name })}
+      title={t("lobby.moveTo", { name })}
+      value={current ?? ""}
+      onChange={(e) => void act(C2S.MOVE_PLAYER, { playerId, teamId: e.target.value || null })}
+      className="max-w-[7.5rem] rounded-md border border-ink/30 bg-vellum px-1 py-0.5 text-sm text-ink"
+    >
+      {state.teams.map((tm) => (
+        <option key={tm.id} value={tm.id}>
+          {tm.emblem} {tm.name}
+        </option>
+      ))}
+      <option value="">{t("lobby.noTeam")}</option>
+    </select>
   );
 }
 
@@ -206,12 +229,18 @@ function TeamBanner({ team }: { team: PublicTeam }) {
       </div>
       <ul className="flex min-h-12 flex-col gap-1.5 px-3 py-2.5">
         {members.map((p) => (
-          <li key={p.id} className="flex items-center gap-2">
+          <li key={p.id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Token emblem={p.avatar} size={26} dim={!p.connected} />
-            <span className="truncate text-lg">{p.name}</span>
+            <span className="min-w-[5.5rem] flex-1 truncate text-lg">{p.name}</span>
             {p.id === me?.id && <span className="text-ink-soft">{t("lobby.you")}</span>}
             {p.isHost && <span className="text-sm text-brass-dark">♛</span>}
-            <span className={`ml-auto text-sm ${p.ready ? "text-moss" : "text-ink-soft"}`}>{p.ready ? "✓" : "…"}</span>
+            <span className={`text-sm ${p.ready ? "text-moss" : "text-ink-soft"}`}>{p.ready ? "✓" : "…"}</span>
+            {!mine && p.id !== me?.id && (
+              <button onClick={() => act(C2S.JOIN_TEAM, { teamId: team.id })} className="btn-paper rounded-full px-2.5 py-0.5 text-sm font-bold">
+                🤝 {t("lobby.teamUp")}
+              </button>
+            )}
+            {isHost && <MoveSelect playerId={p.id} name={p.name} current={team.id} />}
             {isHost && p.id !== me?.id && (
               <button onClick={() => act(C2S.KICK_PLAYER, { playerId: p.id })} className="text-ink-soft hover:text-rust" aria-label={t("lobby.remove", { name: p.name })}>
                 ✕

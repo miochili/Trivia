@@ -116,6 +116,8 @@ Every client→server event takes an **ack callback** and gets back `{ ok: true,
 | `UPDATE_SETTINGS` | `Partial<GameSettings>` | host, lobby | Mode, board length 30/45/60, timer 15/30/45 s, categories (≥2), win condition, correct-answer rule |
 | `CREATE_TEAM` | `{ name }` | member, team mode | Creates a team and joins it (max 6) → `{ teamId }` |
 | `JOIN_TEAM` | `{ teamId \| null }` | member | Switch teams; uneven teams allowed |
+| `MOVE_PLAYER` | `{ playerId, teamId \| null }` | host, team mode, lobby | Put anyone on any team |
+| `LIST_LOBBIES` | `{}` | anyone | Server mode: the public rooms waiting for players → `{ lobbies: OpenLobby[] }` |
 | `RENAME_TEAM` | `{ teamId, name }` | team member or host | |
 | `AUTO_BALANCE_TEAMS` | `{ teamCount? }` | host | Shuffle everyone into N even teams |
 | `SET_READY` | `{ ready }` | member | |
@@ -180,6 +182,7 @@ The game core (`Room`, `GameEngine`, `RoomManager`, `server/socket/dispatch.ts`)
 | Answer secrecy | server-only | kept in the host's tab (a host with dev tools could peek; fine among friends) |
 | Persistence | Prisma/Postgres optional | none (the room lives as long as the host tab) |
 
+- **Open games (P2P).** A host publishes `{ code, host, hostAvatar, players, max, mode, ts }` as a *retained* MQTT message on `trivia-quest-miochili/v1/lobbies/<CODE>`, sent through a public relay over secure WebSockets (`NEXT_PUBLIC_LOBBY_BROKERS`, default HiveMQ, then EMQX). The host repeats it every 15 s while the game is public and waiting. It is cleared when the game starts, goes private or is left, and an MQTT *last will* clears it if the tab dies. The start page subscribes to `…/lobbies/+`, validates every entry and drops anything older than 75 s.
 - **Short links.** `<site>/KOBALI` reaches the same app shell either way: on the Node server an unknown path renders `not-found.tsx`, and on GitHub Pages `404.html` does. The shell reads the code from the path. Navigation uses `history.pushState`, which keeps the static export working.
 - **Circular board.** `src/lib/boardLayout.ts` lays the tiles out as ring sectors (start at 12 o'clock, clockwise). Pawns spring tile to tile, and several pawns on one tile spread across the ring's depth. The dice, the turn status and the roll button sit in the middle of the chart.
 

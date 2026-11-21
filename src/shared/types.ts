@@ -39,6 +39,8 @@ export interface GameSettings {
   teamAnswer: "vote" | "captain";
   /** After a wrong answer, the other sides may steal it for half the points. */
   steals: boolean;
+  /** Listed under "Open games" on the start page while waiting for players. */
+  isPublic: boolean;
   maxPlayers: number;
 }
 
@@ -51,6 +53,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   correctAnswerRule: "stay",
   teamAnswer: "vote",
   steals: true,
+  isPublic: true,
   maxPlayers: 12,
 };
 
@@ -201,6 +204,18 @@ export interface PublicRoomState {
   /** Monotonic version — clients drop stale snapshots. */
   version: number;
   serverNow: number;
+}
+
+/** A joinable game shown in the "Open games" list. */
+export interface OpenLobby {
+  code: string;
+  host: string;
+  hostAvatar: string;
+  players: number;
+  max: number;
+  mode: GameMode;
+  /** Epoch ms of the announcement (stale entries are dropped). */
+  ts: number;
 }
 
 export type Ack<T = object> =

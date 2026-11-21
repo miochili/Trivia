@@ -15,7 +15,8 @@ import { getTransport, hub, joinAsGuest, LOCAL, MODE, request, setTransport, sta
 import { GameScreen } from "./game/GameScreen";
 import { IdentityCard } from "./IdentityCard";
 import { LobbyScreen } from "./lobby/LobbyScreen";
-import { Button, CodeTiles } from "./ui/primitives";
+import { Button, CodeTiles, Token } from "./ui/primitives";
+import { useOpenLobbies } from "@/lib/lobbies";
 import { LanguageSwitcher } from "./ui/LanguageSwitcher";
 
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -101,13 +102,16 @@ function Home({ go }: { go: (c: string | null) => void }) {
     }
   }
 
-  function join() {
+  function join(code: string = joinCode) {
     setError(null);
-    if (!id.name.trim()) return setError(t("home.needName"));
-    if (joinCode.length !== 6) return setError(t("home.codeLength"));
+    if (!id.name.trim()) {
+      document.getElementById("name")?.focus();
+      return setError(t("home.needName"));
+    }
+    if (code.length !== 6) return setError(t("home.codeLength"));
     id.remember();
-    sessionStorage.setItem("tq:autojoin", joinCode);
-    go(joinCode);
+    sessionStorage.setItem("tq:autojoin", code);
+    go(code);
   }
 
   return (
@@ -124,7 +128,9 @@ function Home({ go }: { go: (c: string | null) => void }) {
 
         <div className="ink-rule my-6" />
 
-        <h2 className="font-display text-xl">{t("home.joinTitle")}</h2>
+        <OpenGames onJoin={join} />
+
+        <h2 className="mt-6 font-display text-xl">{t("home.joinTitle")}</h2>
         <p className="mt-0.5 text-[15px] text-ink-soft">{t("home.joinHint")}</p>
         <div className="mt-3 flex gap-2">
           <input
@@ -140,7 +146,7 @@ function Home({ go }: { go: (c: string | null) => void }) {
             aria-label={t("home.code")}
             className="w-0 min-w-0 flex-1 rounded-lg border-2 border-ink/25 bg-vellum px-2 py-2.5 text-center font-display text-xl tracking-[0.2em] text-ink outline-none placeholder:text-ink/20 focus:border-brass sm:text-2xl"
           />
-          <Button variant="brass" className="shrink-0 px-4 font-display text-lg" disabled={!!busy || joinCode.length !== 6} onClick={join}>
+          <Button variant="brass" className="shrink-0 px-4 font-display text-lg" disabled={!!busy || joinCode.length !== 6} onClick={() => join()}>
             {t("home.join")}
           </Button>
         </div>
@@ -164,6 +170,41 @@ function Home({ go }: { go: (c: string | null) => void }) {
         )}
       </section>
     </main>
+  );
+}
+
+/** Games waiting for players — tap to join, no code needed. */
+function OpenGames({ onJoin }: { onJoin: (code: string) => void }) {
+  const { t } = useT();
+  const { lobbies, status } = useOpenLobbies();
+  return (
+    <section aria-live="polite">
+      <h2 className="flex items-center gap-2 font-display text-xl">
+        {t("lobbies.title")}
+        {status === "ok" && <span className="h-2 w-2 animate-pulse rounded-full bg-moss" aria-hidden />}
+      </h2>
+      {status === "loading" && <p className="mt-1 text-[15px] text-ink-soft">{t("lobbies.loading")}</p>}
+      {status === "unavailable" && <p className="mt-1 text-[15px] text-ink-soft">{t("lobbies.unavailable")}</p>}
+      {status === "ok" && !lobbies.length && <p className="mt-1 text-[15px] text-ink-soft">{t("lobbies.none")}</p>}
+      {lobbies.length > 0 && (
+        <ul className="mt-2 flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
+          {lobbies.map((l) => (
+            <li key={l.code} className="flex items-center gap-3 rounded-lg border border-ink/20 bg-vellum/70 px-3 py-2">
+              <Token emblem={l.hostAvatar} size={36} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-bold leading-tight">{t("lobbies.hostGame", { host: l.host })}</p>
+                <p className="text-sm text-ink-soft">
+                  {t("lobbies.players", { n: l.players, max: l.max })} · {t(l.mode === "teams" ? "settings.teams" : "settings.ffa")}
+                </p>
+              </div>
+              <Button variant="brass" className="shrink-0 px-4 py-2 font-display" onClick={() => onJoin(l.code)}>
+                {t("lobbies.join")}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

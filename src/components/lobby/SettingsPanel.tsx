@@ -67,6 +67,19 @@ export function SettingsPanel() {
           />
         </Field>
 
+        <Field label={t("settings.public")} hint={t("settings.publicHint")}>
+          <Segmented
+            label={t("settings.public")}
+            value={s.isPublic ? "on" : "off"}
+            disabled={!isHost}
+            onChange={(v) => set({ isPublic: v === "on" })}
+            options={[
+              { value: "on", label: t("settings.on") },
+              { value: "off", label: t("settings.off") },
+            ]}
+          />
+        </Field>
+
         <Field label={t("settings.boardLength")} hint={t("settings.boardHint")}>
           <Segmented
             label={t("settings.boardLength")}

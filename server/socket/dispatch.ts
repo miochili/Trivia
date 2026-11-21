@@ -77,6 +77,16 @@ export function createDispatcher(manager: RoomManager, opts: DispatchOptions = {
       const { room, playerId } = ctx(conn);
       room.joinTeam(playerId, teamId);
     }),
+    [C2S.MOVE_PLAYER]: h(schemas.movePlayer, (conn, { playerId: target, teamId }) => {
+      const { room, playerId } = ctx(conn);
+      room.movePlayer(playerId, target, teamId);
+    }),
+    [C2S.LIST_LOBBIES]: h(schemas.empty, () => ({
+      lobbies: [...manager.rooms.values()]
+        .map((r) => r.toOpenLobby())
+        .filter(Boolean)
+        .slice(0, 30),
+    })),
     [C2S.RENAME_TEAM]: h(schemas.renameTeam, (conn, { teamId, name }) => {
       const { room, playerId } = ctx(conn);
       room.renameTeam(playerId, teamId, name);

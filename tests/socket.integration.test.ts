@@ -163,8 +163,25 @@ describe("socket protocol end-to-end", () => {
     expect(await call(a, C2S.AUTO_BALANCE_TEAMS, { teamCount: 2 })).toMatchObject({ ok: true });
     await until(() => s()?.teams.length === 2);
 
+    // choose who's with who: host moves D next to B; others can't move people
+    const bTeam = s().players.find((p) => p.name === "B")!.teamId;
+    const dId = s().players.find((p) => p.name === "D")!.id;
+    expect(await call(c, C2S.MOVE_PLAYER, { playerId: dId, teamId: bTeam })).toMatchObject({ ok: false, code: "err.hostOnly" });
+    expect(await call(a, C2S.MOVE_PLAYER, { playerId: dId, teamId: bTeam })).toMatchObject({ ok: true });
+    await until(() => s()?.players.find((p) => p.id === dId)!.teamId === bTeam);
+
+    // open games list: visible while waiting, hidden when private
+    const listed = async () => ((await call(d, C2S.LIST_LOBBIES)).lobbies as { code: string }[]).some((l) => l.code === code);
+    expect(await listed()).toBe(true);
+    await call(a, C2S.UPDATE_SETTINGS, { isPublic: false });
+    expect(await listed()).toBe(false);
+    await call(a, C2S.UPDATE_SETTINGS, { isPublic: true });
+    // re-balance so both teams have two players again
+    await call(a, C2S.AUTO_BALANCE_TEAMS, { teamCount: 2 });
+
     for (const sock of [b, c, d]) await call(sock, C2S.SET_READY, { ready: true });
     expect(await call(a, C2S.START_GAME)).toMatchObject({ ok: true });
+    expect(await listed()).toBe(false); // started games are not listed
     await until(() => s()?.status === "playing");
     expect(s().game!.sides).toHaveLength(2);
     expect(s().game!.sides.every((side) => side.memberIds.length === 2)).toBe(true);

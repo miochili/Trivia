@@ -15,6 +15,9 @@ A multiplayer board-game trivia site with an old tavern feel: a parchment sea ch
 - **Steals ⚡.** After a wrong answer, every other team or player gets 10 seconds to tap the right one, worth half the points. Each team gets one try.
 - **Hot streak 🔥.** From the 3rd correct answer in a row, each correct answer earns +100 bonus points.
 - **Reactions.** 👏 😂 😱 🔥 🤔 🎉 float up over everyone's screen, even while a question is open.
+- **Open games.** The start page lists games that are waiting for players, so you can tap **Join** without a code. The host can hide their game with **Open games list: Off**.
+  - On GitHub Pages, hosts announce their game on a free public message relay (HiveMQ, with EMQX as backup). If the relay can't be reached, joining by code still works.
+- **Choose your team.** In Team mode, tap **🤝 Team up** next to a friend to join their team. The host can move anyone to any team.
 - **Easy room codes.** Codes are six letters that are easy to say out loud (KOBALI, MIRETO…), with no digits.
 - **Reconnect-safe.** Reload or lose signal and you're put back in your seat.
 

@@ -15,6 +15,7 @@ import type {
   ActiveQuestionView,
   CategoryId,
   GameSettings,
+  OpenLobby,
   PublicRoomState,
   SpecialTileType,
   WinReason,
@@ -29,6 +30,8 @@ export const C2S = {
   UPDATE_SETTINGS: "UPDATE_SETTINGS",
   CREATE_TEAM: "CREATE_TEAM",
   JOIN_TEAM: "JOIN_TEAM",
+  MOVE_PLAYER: "MOVE_PLAYER",
+  LIST_LOBBIES: "LIST_LOBBIES",
   RENAME_TEAM: "RENAME_TEAM",
   AUTO_BALANCE_TEAMS: "AUTO_BALANCE_TEAMS",
   SET_READY: "SET_READY",
@@ -142,6 +145,8 @@ export interface ClientToServerEvents {
   [C2S.UPDATE_SETTINGS]: (p: Partial<GameSettings>, ack: (r: Ack) => void) => void;
   [C2S.CREATE_TEAM]: (p: { name: string }, ack: (r: Ack<{ teamId: string }>) => void) => void;
   [C2S.JOIN_TEAM]: (p: { teamId: string | null }, ack: (r: Ack) => void) => void;
+  [C2S.MOVE_PLAYER]: (p: { playerId: string; teamId: string | null }, ack: (r: Ack) => void) => void;
+  [C2S.LIST_LOBBIES]: (p: Record<string, never>, ack: (r: Ack<{ lobbies: OpenLobby[] }>) => void) => void;
   [C2S.RENAME_TEAM]: (p: { teamId: string; name: string }, ack: (r: Ack) => void) => void;
   [C2S.AUTO_BALANCE_TEAMS]: (p: { teamCount?: number }, ack: (r: Ack) => void) => void;
   [C2S.SET_READY]: (p: { ready: boolean }, ack: (r: Ack) => void) => void;
