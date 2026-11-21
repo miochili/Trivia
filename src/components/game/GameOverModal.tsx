@@ -1,7 +1,7 @@
 "use client";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useMemo } from "react";
-import { CATEGORY_META } from "@/shared/constants";
+import { CATEGORY_META, FINISH_BONUS } from "@/shared/constants";
 import { C2S } from "@/shared/events";
 import { CATEGORY_IDS, type PublicGameState, type PublicRoomState } from "@/shared/types";
 import { useT } from "@/lib/i18n";
@@ -15,12 +15,12 @@ export function GameOverModal({ room, game }: { room: PublicRoomState; game: Pub
   const reduce = useReducedMotion();
   const over = game.phase === "game_over" && game.winnerSideId;
   const winner = game.sides.find((s) => s.id === game.winnerSideId);
+  // same order the engine used: points, then board position, then trophies
   const standings = useMemo(() => {
-    const rest = game.sides
-      .filter((s) => s.id !== game.winnerSideId)
-      .sort((a, b) => (game.winReason === "trophies" ? b.trophies.length - a.trophies.length : b.position - a.position) || b.score - a.score);
+    const rest = game.sides.filter((s) => s.id !== game.winnerSideId).sort((a, b) => b.score - a.score || b.position - a.position || b.trophies.length - a.trophies.length);
     return winner ? [winner, ...rest] : rest;
   }, [game, winner]);
+  const endedBy = game.sides.find((s) => s.id === game.endedBySideId);
 
   return (
     <AnimatePresence>
@@ -43,7 +43,10 @@ export function GameOverModal({ room, game }: { room: PublicRoomState; game: Pub
               {t("over.wins", { side: winner.name })}
             </h2>
             <Flourish className="mx-auto mt-1 text-ink-soft" />
-            <p className="mt-1 text-lg italic text-ink-soft">{t(game.winReason === "trophies" ? "over.reasonTrophies" : "over.reasonFinish")}</p>
+            <p className="mt-1 font-display text-2xl text-brass-dark">{t("over.pts", { n: winner.score })}</p>
+            <p className="mt-2 text-ink-soft">
+              {t("over.mostPoints")} {endedBy && t(game.winReason === "trophies" ? "over.endedTrophies" : "over.endedFinish", { side: endedBy.name, n: FINISH_BONUS })}
+            </p>
 
             <h3 className="mt-6 text-left font-display text-xl">{t("over.standings")}</h3>
             <ol className="mt-2 space-y-1.5 text-left">

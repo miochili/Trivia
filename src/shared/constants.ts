@@ -27,6 +27,10 @@ export const TIMING = {
 
 export const POINTS: Record<Difficulty, number> = { easy: 100, medium: 200, hard: 300 };
 export const BONUS_MOVE_STEPS = 2;
+/** Whoever ends the game by reaching Finish (or collecting every trophy) gets this. */
+export const FINISH_BONUS = 500;
+/** Extra points for winning a category trophy on its 🏆 tile. */
+export const TROPHY_BONUS = 200;
 /** From the 3rd correct answer in a row, each correct answer earns this bonus. */
 export const STREAK_BONUS = 100;
 export const STREAK_HOT = 3;

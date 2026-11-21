@@ -1,6 +1,6 @@
 # Trivia Quest — Architecture
 
-A realtime, multiplayer board-game trivia app with a circular board, little player characters and team crests. Players join a room with a 6-character code, roll a die, move pawns along a snaking board, and answer category questions. You win by reaching the finish or by collecting every category trophy. The UI, game messages and the whole question bank are available in **English, Spanish and German**. Each player picks their own language, so the same room can mix languages.
+A realtime, multiplayer board-game trivia app with a circular board, little player characters and team crests. Players join a room with a 6-character code, roll a die, move pawns along a snaking board, and answer category questions. The game ends when someone reaches the finish or collects every category trophy, and the side with the most points wins (ending it earns a +500 bonus). The UI, game messages and the whole question bank are available in **English, Spanish and German**. Each player picks their own language, so the same room can mix languages.
 
 ---
 
@@ -46,7 +46,8 @@ trivia-quest/
 │   ├── game/GameEngine.ts       ★ turn state machine, dice, movement, tiles, trivia
 │   ├── game/board.ts            board generator (HQ trophy tiles, specials)
 │   ├── questions/QuestionBank.ts   interface + InMemory / Prisma implementations
-│   ├── questions/seedQuestions.ts  85 questions × EN/ES/DE
+│   ├── questions/seedQuestions.ts  85 hand-written questions × EN/ES/DE
+│   ├── questions/gen/              ~22,600 generated questions (fact tables → EN/ES/DE templates)
 │   ├── persistence/GamePersistence.ts  Noop + Prisma (serialised per room)
 │   └── lib/                     ids & tokens, token-bucket rate limiter, prisma loader
 ├── src/
@@ -160,7 +161,9 @@ awaiting_roll ──ROLL_DICE / idle 30 s auto-roll──▶ moving ──land�
 - **Correct answer:** points (100/200/300 × 2 with Double Points). On a 🏆 HQ tile you also win that category's trophy. Then, by host setting, *stay*, *move 2 more* or *roll again*.
 - **Wrong answer or timeout:** pushed back 1 tile, turn ends.
 - **Special tiles:** Roll Again, Swap (with the nearest pawn ahead; the leader swaps with last place), Lose a Turn, Double Points.
-- **Win:** reach Finish, or collect every selected category's trophy (in "All trophies" mode the board loops, with a lap bonus).
+- **Game end:** someone reaches Finish, or collects every selected category's trophy (in "All trophies" mode the board loops, with a lap bonus). The side that ends it gets +500.
+- **Winner:** most points; ties go to board position, then trophies, then whoever ended the game.
+- **Question picking:** pick a question family (capital, population comparison, event year, …) not used in the last 4 questions of that category, then a question with the wanted difficulty. A question's `stem` (what it is about) is never asked twice in one game.
 - **Teams:** one shared pawn and score. The roller/answerer rotates through the team each turn. If the active teammate drops, a connected teammate takes over.
 
 ---

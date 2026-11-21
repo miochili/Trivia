@@ -1,6 +1,7 @@
 import type { Locale } from "../../src/shared/i18n";
 import type { CategoryId, Difficulty, LocalizedQuestion } from "../../src/shared/types";
 import { SEED_QUESTIONS } from "./seedQuestions";
+import { generatedQuestions } from "./gen/generate";
 
 /** Server-only question shape — includes the secret `correctIndex`. */
 export interface StoredQuestion {
@@ -10,6 +11,10 @@ export interface StoredQuestion {
   text: string;
   options: string[];
   correctIndex: number;
+  /** Kind of question (e.g. "capital", "pop-most"); hand-written ones are "classic". */
+  family?: string;
+  /** What it is about — never two questions with the same stem in one game. */
+  stem?: string;
   /** Other languages; options align index-for-index with `options`. */
   translations?: Partial<Record<Locale, LocalizedQuestion>>;
 }
@@ -28,19 +33,7 @@ export class InMemoryQuestionBank implements QuestionBank {
   private readonly all: StoredQuestion[];
 
   constructor(questions?: StoredQuestion[]) {
-    this.all =
-      questions ??
-      (Object.entries(SEED_QUESTIONS) as [CategoryId, (typeof SEED_QUESTIONS)[CategoryId]][]).flatMap(([category, rows]) =>
-        rows.map(([difficulty, en, es, de], i) => ({
-          id: `${category}-${i}`,
-          category,
-          difficulty,
-          text: en[0],
-          options: [...en[1]],
-          correctIndex: 0,
-          translations: { es: { text: es[0], options: [...es[1]] }, de: { text: de[0], options: [...de[1]] } },
-        })),
-      );
+    this.all = questions ?? [...classicQuestions(), ...generatedQuestions()];
   }
 
   async loadPool(categories: CategoryId[]) {
@@ -49,11 +42,28 @@ export class InMemoryQuestionBank implements QuestionBank {
   }
 }
 
+/** The hand-written questions (seedQuestions.ts). */
+export function classicQuestions(): StoredQuestion[] {
+  return (Object.entries(SEED_QUESTIONS) as [CategoryId, (typeof SEED_QUESTIONS)[CategoryId]][]).flatMap(([category, rows]) =>
+        rows.map(([difficulty, en, es, de], i) => ({
+          id: `${category}-${i}`,
+          category,
+          difficulty,
+          family: "classic",
+          stem: `classic:${category}-${i}`,
+          text: en[0],
+          options: [...en[1]],
+          correctIndex: 0,
+          translations: { es: { text: es[0], options: [...es[1]] }, de: { text: de[0], options: [...de[1]] } },
+        })),
+      );
+}
+
 export class PrismaQuestionBank implements QuestionBank {
   readonly kind = "prisma" as const;
   constructor(
     private readonly prisma: import("../lib/prisma").PrismaClient,
-    private readonly perCategoryLimit = 300,
+    private readonly perCategoryLimit = 6000,
   ) {}
 
   async loadPool(categories: CategoryId[]) {
@@ -73,6 +83,8 @@ export class PrismaQuestionBank implements QuestionBank {
       text: q.text,
       options: q.options,
       correctIndex: q.correctIndex,
+      family: q.family,
+      stem: q.stem ?? undefined,
       translations: (q.translations ?? undefined) as StoredQuestion["translations"],
     }));
   }

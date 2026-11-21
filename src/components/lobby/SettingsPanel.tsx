@@ -108,16 +108,16 @@ export function SettingsPanel() {
           />
         </Field>
 
-        <Field label={t("settings.win")} hint={t(s.winCondition === "trophies" ? "settings.winHintLoop" : "settings.winHint")}>
+        <Field label={t("settings.winRule")} hint={`${t("settings.winHintPoints")}${s.winCondition === "trophies" ? " " + t("settings.winHintLoop") : ""}`}>
           <Segmented
-            label={t("settings.win")}
+            label={t("settings.winRule")}
             value={s.winCondition}
             disabled={!isHost}
             onChange={(winCondition) => set({ winCondition })}
             options={[
-              { value: "either", label: t("settings.winEither") },
-              { value: "finish", label: t("settings.winFinish") },
-              { value: "trophies", label: t("settings.winTrophies") },
+              { value: "either", label: t("settings.endEither") },
+              { value: "finish", label: t("settings.endFinish") },
+              { value: "trophies", label: t("settings.endTrophies") },
             ]}
           />
         </Field>

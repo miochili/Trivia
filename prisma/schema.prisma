@@ -140,14 +140,18 @@ model Question {
   /// { "es": { "text": "...", "options": [...] }, "de": {...} } — options in the same order as `options`.
   translations Json?
   explanation  String?
+  /// Kind of question ("classic", "capital", "pop-most", …) — the engine rotates families.
+  family       String      @default("classic")
+  /// What it is about — never two questions with the same stem in one game.
+  stem         String?
   active       Boolean     @default(true)
   timesAsked   Int         @default(0)
   timesCorrect Int         @default(0)
   createdAt    DateTime    @default(now())
   answers      AnswerLog[]
 
-  @@unique([categoryId, text])
   @@index([categoryId, difficulty, active])
+  @@index([categoryId, family])
 }
 
 /// Every resolved answer (incl. timeouts) — stats, difficulty tuning, cheat review.

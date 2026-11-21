@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { POINTS, TIMING } from "../src/shared/constants";
+import { FINISH_BONUS, POINTS, TIMING } from "../src/shared/constants";
 import { S2C, type EngineEvent } from "../src/shared/events";
 import { DEFAULT_SETTINGS, type CategoryId, type GameSettings, type Tile } from "../src/shared/types";
 import { generateBoard } from "../server/game/board";
@@ -260,8 +260,37 @@ describe("winning", () => {
     const move = g.events.find((e) => e.type === S2C.MOVE_PAWN)!;
     expect(move.payload).toMatchObject({ path: [1, 2, 3, 4] });
     g.settleMove(4);
-    expect(g.st()).toMatchObject({ phase: "game_over", winnerSideId: "A", winReason: "finish" });
+    expect(g.st()).toMatchObject({ phase: "game_over", winnerSideId: "A", winReason: "finish", endedBySideId: "A" });
+    expect(g.side("A").score).toBe(FINISH_BONUS);
     expect(g.events.at(-1)!.type).toBe(S2C.GAME_OVER);
+  });
+
+  it("most points wins — even when someone else reached the finish", () => {
+    const g = setup({ tiles: board(Array(12).fill(C)), rolls: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 6, 1, 6] });
+    g.engine.start();
+    const turn = (pid: string, ok: boolean) => {
+      g.engine.roll(pid);
+      const steps = (g.events.filter((e) => e.type === S2C.MOVE_PAWN).at(-1)!.payload as { path: number[] }).path.length;
+      g.settleMove(steps);
+      if (g.st().phase === "game_over") return;
+      g.engine.submitAnswer(pid, g.st().activeQuestion!.question.id, ok ? g.rightIndex() : g.wrongIndex());
+      vi.advanceTimersByTime(TIMING.ANSWER_REVEAL_MS + TIMING.STEP_MS + TIMING.LAND_PAUSE_MS + 2);
+    };
+    for (let i = 0; i < 6; i++) {
+      turn("a", false); // A keeps getting it wrong
+      turn("b", true); // B racks up points (+ streak bonus)
+    }
+    turn("a", false); // A → 6, wrong → 5
+    turn("b", false);
+    turn("a", false); // A → 11, wrong → 10
+    turn("b", false);
+    turn("a", false); // A → finish (13): game ends, +500
+    expect(g.st()).toMatchObject({ phase: "game_over", endedBySideId: "A", winReason: "finish" });
+    expect(g.side("A").score).toBe(FINISH_BONUS);
+    expect(g.side("B").score).toBeGreaterThan(FINISH_BONUS);
+    expect(g.st().winnerSideId).toBe("B");
+    const over = g.events.at(-1)!.payload as { standings: { sideId: string }[] };
+    expect(over.standings.map((x) => x.sideId)).toEqual(["B", "A"]);
   });
 
   it("collecting every HQ trophy wins in trophies mode (board loops)", () => {
@@ -460,5 +489,35 @@ describe("team fun: votes, steals, streaks", () => {
     turn("b", false);
     turn("a", false);
     expect(g.side("A").streak).toBe(0);
+  });
+});
+
+describe("question variety", () => {
+  it("never asks about the same thing twice in a game and rotates question kinds", async () => {
+    const { InMemoryQuestionBank } = await import("../server/questions/QuestionBank");
+    const full = await new InMemoryQuestionBank().loadPool(["geography", "science"]);
+    let seed = 42;
+    const engine = new GameEngine({
+      roomCode: "TEST02",
+      settings: { ...DEFAULT_SETTINGS, categories: ["geography", "science"] },
+      sides: ["A", "B"].map((id) => ({ id, name: id, color: "#fff", emblem: "🦊", memberIds: [id.toLowerCase()] })),
+      pool: full,
+      board: [],
+      fixedOrder: true,
+      rng: () => ((seed = (seed * 16807) % 2147483647) / 2147483647),
+      rollDie: () => 1,
+      isConnected: () => true,
+      clientIdOf: (id) => id,
+      nameOf: (id) => id,
+      emit: () => {},
+      onChange: () => {},
+      persistence: new NoopPersistence(),
+    });
+    const pick = (c: CategoryId) => (engine as unknown as { pickQuestion: (c: CategoryId, d: "easy" | "medium" | "hard") => StoredQuestion }).pickQuestion(c, "medium");
+    const asked = Array.from({ length: 120 }, (_, i) => pick(i % 2 ? "geography" : "science"));
+    expect(new Set(asked.map((q) => q.stem)).size).toBe(asked.length);
+    const geo = asked.filter((q) => q.category === "geography");
+    for (let i = 1; i < geo.length; i++) expect(geo[i].family).not.toBe(geo[i - 1].family);
+    expect(new Set(geo.map((q) => q.family)).size).toBeGreaterThan(8);
   });
 });

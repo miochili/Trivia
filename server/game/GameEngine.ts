@@ -1,5 +1,5 @@
 import { secureInt } from "../lib/ids";
-import { BONUS_MOVE_STEPS, LAP_BONUS, POINTS, STREAK_BONUS, STREAK_HOT, TIMING } from "../../src/shared/constants";
+import { BONUS_MOVE_STEPS, FINISH_BONUS, LAP_BONUS, POINTS, STREAK_BONUS, STREAK_HOT, TIMING, TROPHY_BONUS } from "../../src/shared/constants";
 import { S2C, type EngineEvent, type GameOverEvent, type MoveReason } from "../../src/shared/events";
 import type {
   ActiveQuestionView,
@@ -98,6 +98,7 @@ export class GameEngine {
   private lastReveal: AnswerReveal | null = null;
   private winnerSideId: string | null = null;
   private winReason: WinReason | null = null;
+  private endedBySideId: string | null = null;
   private autoActionAt: number | null = null;
   private log: LogEntry[] = [];
   private logSeq = 0;
@@ -268,6 +269,7 @@ export class GameEngine {
       lastReveal: this.lastReveal,
       winnerSideId: this.winnerSideId,
       winReason: this.winReason,
+      endedBySideId: this.endedBySideId,
       autoActionAt: this.autoActionAt,
       log: this.log.slice(-40),
     };
@@ -448,6 +450,8 @@ export class GameEngine {
       if (aq.tile.hq && !side.trophies.includes(aq.view.question.category)) {
         trophy = aq.view.question.category;
         side.trophies.push(trophy);
+        points += TROPHY_BONUS;
+        side.score += TROPHY_BONUS;
       }
     } else {
       side.streak = 0;
@@ -605,18 +609,51 @@ export class GameEngine {
     return r < 0.45 ? "easy" : r < 0.85 ? "medium" : "hard";
   }
 
+  /** category → family → questions (built once per game). */
+  private families: Map<CategoryId, Map<string, StoredQuestion[]>> | null = null;
+  private usedStems = new Set<string>();
+  private recentFamilies: string[] = [];
+
+  /**
+   * Picks a question so a game feels varied:
+   *  1. choose a family (kind of question) at random, skipping the last few used
+   *  2. never repeat a question — or another question about the same thing — in one game
+   *  3. prefer the wanted difficulty within that family
+   */
   private pickQuestion(category: CategoryId, difficulty: Difficulty): StoredQuestion | null {
-    const inCat = this.deps.pool.filter((q) => q.category === category);
-    if (!inCat.length) return null;
-    let candidates = inCat.filter((q) => q.difficulty === difficulty && !this.usedQuestionIds.has(q.id));
-    if (!candidates.length) candidates = inCat.filter((q) => !this.usedQuestionIds.has(q.id));
-    if (!candidates.length) {
-      // Category exhausted — allow repeats again.
-      for (const q of inCat) this.usedQuestionIds.delete(q.id);
-      candidates = inCat;
+    if (!this.families) {
+      this.families = new Map();
+      for (const q of this.deps.pool) {
+        const byFam = this.families.get(q.category) ?? new Map<string, StoredQuestion[]>();
+        const fam = q.family ?? "classic";
+        byFam.set(fam, [...(byFam.get(fam) ?? []), q]);
+        this.families.set(q.category, byFam);
+      }
     }
-    const pick = candidates[Math.floor(this.rng() * candidates.length)];
+    const byFam = this.families.get(category);
+    if (!byFam?.size) return null;
+    const fresh = (q: StoredQuestion) => !this.usedQuestionIds.has(q.id) && !this.usedStems.has(q.stem ?? q.id);
+
+    let famNames = [...byFam.keys()].filter((f) => byFam.get(f)!.some(fresh));
+    if (!famNames.length) {
+      // Everything in this category was asked — allow repeats again.
+      for (const qs of byFam.values()) for (const q of qs) {
+        this.usedQuestionIds.delete(q.id);
+        this.usedStems.delete(q.stem ?? q.id);
+      }
+      famNames = [...byFam.keys()];
+    }
+    const notRecent = famNames.filter((f) => !this.recentFamilies.includes(f));
+    const fam = (notRecent.length ? notRecent : famNames)[Math.floor(this.rng() * (notRecent.length || famNames.length))];
+    const qs = byFam.get(fam)!.filter(fresh);
+    const pool = qs.length ? qs : byFam.get(fam)!;
+    const wanted = pool.filter((q) => q.difficulty === difficulty);
+    const from = wanted.length ? wanted : pool;
+    const pick = from[Math.floor(this.rng() * from.length)];
+
     this.usedQuestionIds.add(pick.id);
+    this.usedStems.add(pick.stem ?? pick.id);
+    this.recentFamilies = [fam, ...this.recentFamilies].slice(0, 4);
     return pick;
   }
 
@@ -682,29 +719,38 @@ export class GameEngine {
 
   // ───────────────────────────── end of game ─────────────────────────────
 
-  private finishGame(winner: SideState, reason: WinReason) {
+  /**
+   * Reaching Finish (or collecting every trophy) ENDS the game and earns a
+   * bonus — but the winner is whoever has the most points. Ties: further on
+   * the board, then more trophies, then whoever ended the game.
+   */
+  private finishGame(endedBy: SideState, reason: WinReason) {
     this.clearTimer();
     this.phase = "game_over";
     this.activePlayerId = null;
     this.autoActionAt = null;
-    this.winnerSideId = winner.id;
+    endedBy.score += FINISH_BONUS;
+    this.endedBySideId = endedBy.id;
     this.winReason = reason;
-    const rest = this.sides
-      .filter((s) => s.id !== winner.id)
-      .sort((a, b) =>
-        reason === "trophies"
-          ? b.trophies.length - a.trophies.length || b.score - a.score
-          : b.position - a.position || b.score - a.score,
-      );
-    const standings: GameOverEvent["standings"] = [winner, ...rest].map((s) => ({
+    this.pushLog(reason === "finish" ? "log.endFinish" : "log.endTrophies", { side: endedBy.name, n: FINISH_BONUS }, "special", endedBy.id);
+    const ranked = [...this.sides].sort(
+      (a, b) =>
+        b.score - a.score ||
+        b.position - a.position ||
+        b.trophies.length - a.trophies.length ||
+        Number(b.id === endedBy.id) - Number(a.id === endedBy.id),
+    );
+    const winner = ranked[0];
+    this.winnerSideId = winner.id;
+    const standings: GameOverEvent["standings"] = ranked.map((s) => ({
       sideId: s.id,
       name: s.name,
       score: s.score,
       position: s.position,
       trophies: [...s.trophies],
     }));
-    this.pushLog(reason === "finish" ? "log.winFinish" : "log.winTrophies", { side: winner.name }, "good", winner.id);
-    this.deps.emit({ type: S2C.GAME_OVER, payload: { winnerSideId: winner.id, reason, standings } });
+    this.pushLog("log.winPoints", { side: winner.name, n: winner.score }, "good", winner.id);
+    this.deps.emit({ type: S2C.GAME_OVER, payload: { winnerSideId: winner.id, reason, endedBySideId: endedBy.id, endBonus: FINISH_BONUS, standings } });
     void this.deps.persistence.gameEnded({
       code: this.deps.roomCode,
       winnerSideId: winner.id,

@@ -184,8 +184,12 @@ export interface PublicGameState {
   lastRoll: number | null;
   activeQuestion: ActiveQuestionView | null;
   lastReveal: AnswerReveal | null;
+  /** Highest final score (the winner). */
   winnerSideId: string | null;
+  /** What ended the game: someone reached Finish, or collected every trophy. */
   winReason: WinReason | null;
+  /** The side that ended the game (received the finish bonus). */
+  endedBySideId: string | null;
   /** Server epoch ms of an automatic action (idle auto-roll / skip), for UI hints. */
   autoActionAt: number | null;
   log: LogEntry[];

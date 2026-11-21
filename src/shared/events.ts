@@ -133,6 +133,8 @@ export interface ReactionEvent {
 export interface GameOverEvent {
   winnerSideId: string;
   reason: WinReason;
+  endedBySideId: string;
+  endBonus: number;
   standings: { sideId: string; name: string; score: number; position: number; trophies: CategoryId[] }[];
 }
 
