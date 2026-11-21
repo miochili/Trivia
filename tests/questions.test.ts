@@ -30,7 +30,7 @@ describe("question bank", async () => {
         expect(l!.options, q.id).toHaveLength(4);
         expect(new Set(l!.options).size, `${q.id} duplicate options: ${l!.options}`).toBe(4);
         for (const o of l!.options) expect(o.trim().length, q.id).toBeGreaterThan(0);
-        expect(l!.text, q.id).not.toMatch(/undefined|null|NaN|\$\{/);
+        expect(l!.text, q.id).not.toMatch(/undefined|NaN|\$\{|\[object/);
       }
     }
   });

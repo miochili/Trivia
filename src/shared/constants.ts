@@ -46,6 +46,8 @@ export const CATEGORY_META: Record<CategoryId, { name: string; color: string; ic
   sports: { name: "Sports", color: "#b5612b", icon: "⚽" },
   art: { name: "Art", color: "#6c4c80", icon: "🎨" },
   geography: { name: "Geography", color: "#35577f", icon: "🧭" },
+  food: { name: "Food & Drink", color: "#7b4a2a", icon: "🍲" },
+  nature: { name: "Nature & Animals", color: "#5f7a2a", icon: "🌿" },
 };
 
 export const SPECIAL_META: Record<SpecialTileType, { name: string; icon: string; color: string; blurb: string }> = {

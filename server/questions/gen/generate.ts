@@ -19,6 +19,21 @@ import {
   SUMMER_OLYMPICS, WORLD_CUP_HOSTS, WORLD_CUP_WINNERS,
 } from "./data/culture";
 import { CITIES, NEVER_WC_HOSTS } from "./data/cities";
+import { CHEESES, DISHES, DRINKS, FRUITS, INGREDIENTS, MADE_FROM, VEGETABLES } from "./data/food";
+import { DESERTS, ISLANDS, MOUNTAINS, NEIGHBOURS, RIVER_CITIES, RIVERS } from "./data/geo2";
+import { ANCIENT_SITES, EXTRA_EVENTS, LEADERS } from "./data/hist2";
+import { EXTRA_DISCOVERIES, ORGAN_JOBS, ORGANS, UNITS } from "./data/sci2";
+import { BUILDINGS, EXTRA_BOOKS, WORKS } from "./data/art2";
+import { ANIMATED, GAMES, SONGS, TV_SHOWS } from "./data/pop2";
+import { CLUBS, EXTRA_ATHLETES, EXTRA_SPORTS, TEAM_SIZES, TERMS, TOURNAMENTS } from "./data/sport2";
+import { ANIMAL_HOMES, ANIMAL_LEGS, ANIMAL_MASS, BROADLEAF, CARNIVORES, CONIFERS, HERBIVORES } from "./data/nature";
+
+// extra rows feed the existing question families too
+EVENTS.push(...EXTRA_EVENTS);
+DISCOVERIES.push(...EXTRA_DISCOVERIES);
+BOOKS.push(...EXTRA_BOOKS);
+ATHLETES.push(...EXTRA_ATHLETES);
+Object.assign(SPORTS, EXTRA_SPORTS);
 
 type L = [string, string, string]; // en, es, de
 const same = (s: string): L => [s, s, s];
@@ -255,7 +270,7 @@ function science() {
       for (let v = 0; v < 8; v++) {
         const ws = sample(ra, others, 3)!;
         const tricky = TRICKY.has(m[1]) || ws.some((w) => TRICKY.has(w[1]));
-        add("animal-is", `${cls}:${m[1]}`, "science", TRICKY.has(m[1]) ? "hard" : tricky ? "medium" : "easy",
+        add("animal-is", `${cls}:${m[1]}`, "nature", TRICKY.has(m[1]) ? "hard" : tricky ? "medium" : "easy",
           [`Which of these animals is ${/^[aeiou]/.test(cen) ? "an" : "a"} ${cen}?`, `¿Cuál de estos animales es ${ES_ART[cls]} ${ces}?`, `Welches dieser Tiere gehört zu den ${DE_GROUP[cls]}?`],
           animalL(m), ws.map(animalL));
       }
@@ -264,7 +279,7 @@ function science() {
       for (const o of others) {
         for (let v = 0; v < 3; v++) {
           const ws = sample(ra, members, 3)!;
-          add("animal-not", `${cls}:${o[1]}`, "science", TRICKY.has(o[1]) || ws.some((w) => TRICKY.has(w[1])) ? "hard" : "medium",
+          add("animal-not", `${cls}:${o[1]}`, "nature", TRICKY.has(o[1]) || ws.some((w) => TRICKY.has(w[1])) ? "hard" : "medium",
             [`Which of these animals is NOT ${/^[aeiou]/.test(cen) ? "an" : "a"} ${cen}?`, `¿Cuál de estos animales NO es ${ES_ART[cls]} ${ces}?`, `Welches dieser Tiere gehört NICHT zu den ${DE_GROUP[cls]}?`],
             animalL(o), ws.map(animalL));
         }
@@ -791,6 +806,277 @@ function more() {
   }
 }
 
+// ── generic builders ────────────────────────────────────────────────
+/** One question per row (× variants): the answer comes from `right`, wrong answers from `pool`. */
+function lookup<T, A>(o: {
+  family: string; category: CategoryId; rows: T[]; variants?: number;
+  stem: (r: T) => string; diff: (r: T) => Difficulty; text: (r: T) => L;
+  right: (r: T) => A; pool: A[]; label: (a: A) => L; ok?: (r: T, a: A) => boolean;
+}) {
+  const r = rngFor(o.family);
+  for (const row of o.rows) {
+    const right = o.right(row);
+    const rl = o.label(right);
+    for (let v = 0; v < (o.variants ?? 3); v++) {
+      const ws = sample(r, o.pool, 3, (a) => o.label(a)[0] !== rl[0] && (!o.ok || o.ok(row, a)));
+      if (ws) add(o.family, o.stem(row), o.category, o.diff(row), o.text(row), rl, ws.map(o.label));
+    }
+  }
+}
+/** "Which of these belongs to <group>?" — one right row from the group, three rows from other groups. */
+function which<T>(o: {
+  family: string; category: CategoryId; rows: T[]; per: number; diff: Difficulty | ((key: string) => Difficulty);
+  key: (r: T) => string; label: (r: T) => L; text: (key: string) => L; ok?: (right: T, cand: T, key: string) => boolean;
+}) {
+  const r = rngFor(o.family);
+  const keys = [...new Set(o.rows.map(o.key))];
+  for (const k of keys) {
+    const mine = o.rows.filter((x) => o.key(x) === k);
+    const others = o.rows.filter((x) => o.key(x) !== k);
+    for (let v = 0; v < o.per; v++) {
+      const right = pick(r, mine);
+      const ws = sample(r, others, 3, (c) => o.label(c)[0] !== o.label(right)[0] && (!o.ok || o.ok(right, c, k)));
+      if (!ws) continue;
+      add(o.family, `${k}:${o.label(right)[0]}:${ws.map((w) => o.label(w)[0]).sort().join("+")}`, o.category,
+        typeof o.diff === "function" ? o.diff(k) : o.diff, o.text(k), o.label(right), ws.map(o.label));
+    }
+  }
+}
+const deAus = (c: Country) => c.deIn.replace(/^in der /, "aus der ").replace(/^in den /, "aus den ").replace(/^auf den /, "von den ").replace(/^im /, "aus dem ").replace(/^in /, "aus ");
+const deZu = (c: Country) => c.deIn.replace(/^in der /, "zur ").replace(/^in den /, "zu den ").replace(/^auf den /, "zu den ").replace(/^im /, "zum ").replace(/^in /, "zu ");
+const deAcc = (c: Country) => c.deSubj.replace(/^der /, "den ");
+const esA = (c: Country) => `a ${c.esSubj}`.replace(/^a el /, "al ");
+const nameOf = (c: Country) => c.name;
+const known = COUNTRIES.filter((c) => c.pop >= 3);
+const contL = (k: Continent) => CONTINENTS[k];
+const contKeys = Object.keys(CONTINENTS) as Continent[];
+const groupYesNo = (family: string, category: CategoryId, n: number, yes: L[], no: L[], d: Difficulty, text: L) => {
+  const r = rngFor(family);
+  for (let i = 0; i < n; i++) {
+    const right = pick(r, yes);
+    const ws = sample(r, no, 3)!;
+    add(family, `${right[0]}:${ws.map((w) => w[0]).sort().join("+")}`, category, d, text, right, ws);
+  }
+};
+
+function extra() {
+  // ── geography ──
+  const riverEs = (es: string) => (es.startsWith("Río ") ? `el ${low(es)}` : `el río ${es}`);
+  const riverDe = (de: string) => (de === "Gelber Fluss" ? "der Gelbe Fluss" : de.endsWith("Strom") ? `der ${de}` : `der Fluss ${de}`);
+  const BIG_RIVERS = new Set(["Nile", "Amazon", "Mississippi", "Danube", "Rhine", "Thames", "Seine", "Ganges", "Yangtze", "Volga"]);
+  lookup({ family: "river-continent", category: "geography", rows: RIVERS, variants: 2, stem: (x) => x[0], diff: (x) => (BIG_RIVERS.has(x[0]) ? "easy" : "medium"),
+    text: (x) => [`Which continent does the ${x[0]} flow through?`, `¿Por qué continente fluye ${riverEs(x[1])}?`, `Durch welchen Kontinent fließt ${riverDe(x[2])}?`],
+    right: (x) => x[3], pool: contKeys, label: contL });
+  which({ family: "river-which", category: "geography", rows: RIVERS, per: 25, diff: "medium", key: (x) => x[3], label: (x) => [x[0], x[1], x[2]],
+    text: (k) => [`Which of these rivers flows in ${CONTINENTS[k as Continent][0]}?`, `¿Cuál de estos ríos está en ${CONTINENTS[k as Continent][1]}?`, `Welcher dieser Flüsse fließt in ${CONTINENTS[k as Continent][2]}?`] });
+  const riverPool = [...new Map([...RIVER_CITIES.map((c) => [c[3], [c[3], c[4], c[5]] as L] as const), ...RIVERS.map((x) => [x[0], [x[0], x[1], x[2]] as L] as const)]).values()];
+  lookup({ family: "river-city", category: "geography", rows: RIVER_CITIES, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`Which river flows through ${x[0]}?`, `¿Qué río pasa por ${x[1]}?`, `Welcher Fluss fließt durch ${x[2]}?`],
+    right: (x) => [x[3], x[4], x[5]] as L, pool: riverPool, label: (l) => l });
+  which({ family: "river-city-rev", category: "geography", rows: RIVER_CITIES, per: 12, diff: "medium", key: (x) => x[3], label: (x) => [x[0], x[1], x[2]],
+    text: (k) => { const x = RIVER_CITIES.find((c) => c[3] === k)!; return [`Which of these cities lies on the ${x[3]}?`, `¿Cuál de estas ciudades está a orillas del ${x[4]}?`, `Welche dieser Städte liegt am Fluss ${x[5]}?`]; } });
+  const FAMOUS_PEAKS = new Set(["Mount Everest", "Mount Fuji", "Kilimanjaro", "Vesuvius", "Mount Etna", "Mont Blanc", "Table Mountain", "Sugarloaf Mountain", "Uluru"]);
+  lookup({ family: "mountain-country", category: "geography", rows: MOUNTAINS, stem: (x) => x[0], diff: (x) => (FAMOUS_PEAKS.has(x[0]) ? "medium" : "hard"),
+    text: (x) => [`In which country is ${x[0]}?`, `¿En qué país está ${x[1]}?`, `In welchem Land liegt ${x[2]}?`],
+    right: (x) => byId.get(x[3])!, pool: known, label: nameOf, ok: (x, c) => c.id !== x[3] && !(x[4] ?? []).includes(c.id) });
+  which({ family: "mountain-rev", category: "geography", rows: MOUNTAINS, per: 8, diff: "hard", key: (x) => x[3], label: (x) => capL([x[0], x[1], x[2]]),
+    text: (k) => { const c = byId.get(k)!; return [`Which of these mountains is in ${c.enSubj}?`, `¿Cuál de estas montañas está en ${c.esSubj}?`, `Welcher dieser Berge liegt ${c.deIn}?`]; },
+    ok: (_, cand, k) => !(cand[4] ?? []).includes(k) });
+  const FAMOUS_ISLANDS = new Set(["Sicily", "Crete", "Mallorca", "Hawaii", "Bali", "Tasmania", "Corsica", "Sardinia", "Ibiza", "Tenerife"]);
+  lookup({ family: "island-country", category: "geography", rows: ISLANDS, stem: (x) => x[0], diff: (x) => (FAMOUS_ISLANDS.has(x[0]) ? "easy" : "medium"),
+    text: (x) => [`Which country ${x[4] ? "do" : "does"} ${x[0]} belong to?`, `¿A qué país pertenece${x[4] ? "n" : ""} ${x[1]}?`, `Zu welchem Land gehör${x[4] ? "en" : "t"} ${x[2]}?`],
+    right: (x) => byId.get(x[3])!, pool: known, label: nameOf, ok: (x, c) => c.id !== x[3] });
+  which({ family: "island-rev", category: "geography", rows: ISLANDS, per: 10, diff: "medium", key: (x) => x[3], label: (x) => capL([x[0], x[1], x[2]]),
+    text: (k) => { const c = byId.get(k)!; return [`Which of these islands belongs to ${c.enSubj}?`, `¿Cuál de estas islas pertenece ${esA(c)}?`, `Welche dieser Inseln gehört ${deZu(c)}?`]; } });
+  const rb = rngFor("borders");
+  for (const [xid, nbs] of Object.entries(NEIGHBOURS)) {
+    const x = byId.get(xid);
+    if (!x) throw new Error(`unknown country ${xid}`);
+    const near = (o: Country) => o.id !== xid && !nbs.includes(o.id) && (o.continent === x.continent || rb() < 0.25);
+    for (let v = 0; v < Math.min(nbs.length * 2, 10); v++) {
+      const right = byId.get(pick(rb, nbs))!;
+      const ws = sample(rb, COUNTRIES, 3, near);
+      if (ws) add("border", `${xid}:${right.id}`, "geography", "medium",
+        [`Which of these countries borders ${x.enSubj}?`, `¿Cuál de estos países tiene frontera con ${x.esSubj}?`, `Welches dieser Länder grenzt an ${deAcc(x)}?`], right.name, ws.map(nameOf));
+    }
+    if (nbs.length >= 3) {
+      for (let v = 0; v < 8; v++) {
+        const right = sample(rb, COUNTRIES, 1, (o) => near(o) && o.continent === x.continent)?.[0];
+        const ws = sample(rb, nbs, 3);
+        if (right && ws) add("border-not", `${xid}:${right.id}`, "geography", "hard",
+          [`Which of these countries does NOT border ${x.enSubj}?`, `¿Cuál de estos países NO tiene frontera con ${x.esSubj}?`, `Welches dieser Länder grenzt NICHT an ${deAcc(x)}?`],
+          right.name, ws.map((id) => byId.get(id)!.name));
+      }
+    }
+  }
+  lookup({ family: "desert-continent", category: "geography", rows: DESERTS, variants: 2, stem: (x) => x[0], diff: (x) => (x[0] === "the Sahara" || x[0] === "the Gobi" ? "easy" : "medium"),
+    text: (x) => [`On which continent is ${x[0]}?`, `¿En qué continente está ${x[1]}?`, `Auf welchem Kontinent liegt ${x[2]}?`], right: (x) => x[3], pool: contKeys, label: contL });
+  which({ family: "desert-rev", category: "geography", rows: DESERTS, per: 12, diff: "medium", key: (x) => x[3], label: (x) => capL([x[0], x[1], x[2]]),
+    text: (k) => [`Which of these deserts is in ${CONTINENTS[k as Continent][0]}?`, `¿Cuál de estos desiertos está en ${CONTINENTS[k as Continent][1]}?`, `Welche dieser Wüsten liegt in ${CONTINENTS[k as Continent][2]}?`] });
+
+  // ── history ──
+  const FAMOUS_LEADERS = new Set(["George Washington", "Abraham Lincoln", "Winston Churchill", "Napoleon Bonaparte", "Nelson Mandela", "Angela Merkel", "Mao Zedong", "Cleopatra", "John F. Kennedy", "Queen Victoria"]);
+  lookup({ family: "leader-country", category: "history", rows: LEADERS, stem: (x) => x[0], diff: (x) => (FAMOUS_LEADERS.has(x[0]) ? "easy" : "medium"),
+    text: (x) => [`Which country did ${x[0]} lead?`, `¿Qué país dirigió ${x[0]}?`, `An der Spitze welches Landes stand ${x[0]}?`],
+    right: (x) => byId.get(x[1])!, pool: COUNTRIES.filter((c) => c.pop >= 5), label: nameOf, ok: (x, c) => c.id !== x[1] });
+  which({ family: "leader-rev", category: "history", rows: LEADERS, per: 10, diff: "medium", key: (x) => x[1], label: (x) => same(x[0]),
+    text: (k) => { const c = byId.get(k)!; return [`Which of these people led ${c.enSubj}?`, `¿Quién de estas personas dirigió ${c.esSubj}?`, `Wer davon regierte ${c.deIn}?`]; } });
+  const civPool = [...new Map(ANCIENT_SITES.map((x) => [x[3], [x[3], x[4], x[5]] as L])).values()];
+  lookup({ family: "ancient-builders", category: "history", rows: ANCIENT_SITES, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`Which civilisation built ${x[0]}?`, `¿Qué civilización construyó ${x[1]}?`, `Welche Kultur erbaute ${x[2]}?`],
+    right: (x) => [x[3], x[4], x[5]] as L, pool: civPool, label: (l) => l });
+  which({ family: "ancient-rev", category: "history", rows: ANCIENT_SITES, per: 8, diff: "medium", key: (x) => x[3],
+    label: (x) => capL([x[0], x[1], x[2].replace(/^den /, "der ")]),
+    text: (k) => { const x = ANCIENT_SITES.find((s) => s[3] === k)!; return [`Which of these did ${low(x[3])} build?`, `¿Cuál de estas obras construyeron ${low(x[4])}?`, `Was davon erbauten ${low(x[5])}?`]; } });
+
+  // ── science ──
+  const BASIC_UNITS = new Set(["force", "energy", "power", "electric current", "voltage", "electrical resistance", "frequency", "pressure", "mass", "length", "time"]);
+  const unitL = (x: (typeof UNITS)[number]): L => [x[3], x[4], x[5]];
+  lookup({ family: "si-unit", category: "science", rows: UNITS, stem: (x) => x[0], diff: (x) => (BASIC_UNITS.has(x[0]) ? "medium" : "hard"),
+    text: (x) => [`What is the SI unit of ${x[0]}?`, `¿Qué unidad del SI se usa para esta magnitud: ${x[1]}?`, `Welche SI-Einheit gehört zur Größe „${x[2]}“?`],
+    right: unitL, pool: UNITS.map(unitL), label: (l) => l });
+  lookup({ family: "si-unit-rev", category: "science", rows: UNITS, stem: (x) => x[3], diff: (x) => (BASIC_UNITS.has(x[0]) ? "medium" : "hard"),
+    text: (x) => [`The ${low(x[3])} is the SI unit of which quantity?`, `La unidad del SI «${low(x[4])}», ¿qué magnitud mide?`, `Die SI-Einheit „${x[5]}“ – welche Größe misst man damit?`],
+    right: (x) => capL([x[0], x[1], x[2]]), pool: UNITS.map((x) => capL([x[0], x[1], x[2]])), label: (l) => l });
+  const organDiff: Record<string, Difficulty> = { heart: "easy", lungs: "easy", brain: "easy", stomach: "easy", skin: "medium", kidneys: "medium", spleen: "hard", thyroid: "hard", gallbladder: "hard" };
+  lookup({ family: "organ", category: "science", rows: ORGAN_JOBS, stem: (x) => x[3], diff: (x) => organDiff[x[3]] ?? "medium",
+    text: (x) => [`Which organ ${x[0]}?`, `¿Qué órgano ${x[1]}?`, `Welches Organ ${x[2]}?`],
+    right: (x) => x[3], pool: Object.keys(ORGANS), label: (k) => ORGANS[k], ok: (x, k) => !(x[4] ?? []).includes(k) });
+
+  // ── art ──
+  const composers = [...new Set([...WORKS.map((w) => w[3]), ...PEOPLE.music])];
+  lookup({ family: "music-work", category: "art", rows: WORKS, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`Who composed “${x[0]}”?`, `¿Quién compuso «${x[1]}»?`, `Wer komponierte „${x[2]}“?`],
+    right: (x) => x[3], pool: composers, label: same, ok: (x, c) => !(x[4] ?? []).includes(c) });
+  which({ family: "music-work-rev", category: "art", rows: WORKS, per: 8, diff: "medium", key: (x) => x[3], label: (x) => [x[0], x[1], x[2]],
+    text: (k) => [`Which of these works did ${k} compose?`, `¿Cuál de estas obras compuso ${k}?`, `Welches dieser Werke komponierte ${k}?`], ok: (_, c, k) => !(c[4] ?? []).includes(k) });
+  lookup({ family: "building-architect", category: "art", rows: BUILDINGS, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`Who designed ${x[0]}?`, `¿Quién diseñó ${x[1]}?`, `Wer entwarf ${x[2]}?`],
+    right: (x) => x[3], pool: [...new Set(BUILDINGS.map((b) => b[3]))], label: same });
+  which({ family: "building-rev", category: "art", rows: BUILDINGS, per: 6, diff: "medium", key: (x) => x[3], label: (x) => capL([x[0], x[1], x[2].replace(/^den /, "der ")]),
+    text: (k) => [`Which of these buildings did ${k} design?`, `¿Cuál de estos edificios diseñó ${k}?`, `Welches dieser Gebäude entwarf ${k}?`] });
+
+  // ── pop culture ──
+  lookup({ family: "game-studio", category: "pop_culture", rows: GAMES, stem: (x) => x[0], diff: (x) => (["Nintendo", "Mojang", "Epic Games"].includes(x[1]) ? "easy" : "medium"),
+    text: (x) => [`Which studio developed the video game “${x[0]}”?`, `¿Qué estudio desarrolló el videojuego «${x[0]}»?`, `Welches Studio hat das Videospiel „${x[0]}“ entwickelt?`],
+    right: (x) => x[1], pool: [...new Set(GAMES.map((g) => g[1]))], label: same });
+  which({ family: "game-rev", category: "pop_culture", rows: GAMES, per: 10, diff: "medium", key: (x) => x[1], label: (x) => same(x[0]),
+    text: (k) => [`Which of these games was made by ${k}?`, `¿Cuál de estos videojuegos es de ${k}?`, `Welches dieser Spiele stammt von ${k}?`] });
+  const pixarDisney = (a: string, b: string) => [a, b].sort().join() === ["Pixar", "Walt Disney Animation Studios"].sort().join();
+  lookup({ family: "animated-studio", category: "pop_culture", rows: ANIMATED, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`Which studio made the animated film “${x[0]}”?`, `¿Qué estudio hizo la película de animación «${x[1]}»?`, `Welches Studio hat den Animationsfilm „${x[2]}“ produziert?`],
+    right: (x) => x[3], pool: [...new Set(ANIMATED.map((a) => a[3]))], label: same, ok: (x, s) => !pixarDisney(x[3], s) });
+  which({ family: "animated-rev", category: "pop_culture", rows: ANIMATED, per: 10, diff: "medium", key: (x) => x[3], label: (x) => [x[0], x[1], x[2]],
+    text: (k) => [`Which of these animated films is by ${k}?`, `¿Cuál de estas películas de animación es de ${k}?`, `Welcher dieser Animationsfilme stammt von ${k}?`], ok: (_, c, k) => !pixarDisney(c[3], k) });
+  const artists = [...new Set([...SONGS.map((x) => x[1]), ...MUSICIANS.map((m) => m[0])])];
+  lookup({ family: "song-artist", category: "pop_culture", rows: SONGS, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`Which artist is known for the song “${x[0]}”?`, `¿Qué artista es conocido por la canción «${x[0]}»?`, `Von wem stammt der Song „${x[0]}“?`],
+    right: (x) => x[1], pool: artists, label: same, ok: (x, a) => !(x[2] ?? []).includes(a) });
+  which({ family: "song-rev", category: "pop_culture", rows: SONGS, per: 8, diff: "medium", key: (x) => x[1], label: (x) => same(x[0]),
+    text: (k) => [`Which of these songs is by ${k}?`, `¿Cuál de estas canciones es de ${k}?`, `Welcher dieser Songs stammt von ${k}?`],
+    ok: (right, c) => !(c[2] ?? []).includes(right[1]) && !(right[2] ?? []).includes(c[1]) });
+  lookup({ family: "tv-country", category: "pop_culture", rows: TV_SHOWS, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`Which country does the TV series “${x[0]}” come from?`, `¿De qué país es la serie «${x[1]}»?`, `Aus welchem Land stammt die Serie „${x[2]}“?`],
+    right: (x) => byId.get(x[3])!, pool: COUNTRIES.filter((c) => c.pop >= 5), label: nameOf, ok: (x, c) => c.id !== x[3] });
+  which({ family: "tv-rev", category: "pop_culture", rows: TV_SHOWS, per: 8, diff: "medium", key: (x) => x[3], label: (x) => [x[0], x[1], x[2]],
+    text: (k) => { const c = byId.get(k)!; return [`Which of these TV series comes from ${c.enSubj}?`, `¿Cuál de estas series es ${c.esDe}?`, `Welche dieser Serien stammt ${deAus(c)}?`]; } });
+
+  // ── sports ──
+  const sportKeys = Object.keys(SPORTS);
+  const sportIn = (k: string) => (/\d/.test(SPORTS[k][0]) ? SPORTS[k][0] : low(SPORTS[k][0]));
+  lookup({ family: "sport-term", category: "sports", rows: TERMS, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`In which sport do you hear the term “${x[0]}”?`, `¿En qué deporte se usa el término «${x[1]}»?`, `In welcher Sportart gibt es den Begriff „${x[2]}“?`],
+    right: (x) => x[3], pool: sportKeys, label: (k) => SPORTS[k], ok: (x, k) => !(x[4] ?? []).includes(k) });
+  which({ family: "sport-term-rev", category: "sports", rows: TERMS, per: 8, diff: "medium", key: (x) => x[3], label: (x) => capL([x[0], x[1], x[2]]),
+    text: (k) => [`Which of these terms is used in ${sportIn(k)}?`, `¿Cuál de estos términos se usa en este deporte: ${low(SPORTS[k][1])}?`, `Welcher dieser Begriffe gehört zur Sportart „${SPORTS[k][2]}“?`],
+    ok: (_, c, k) => !(c[4] ?? []).includes(k) });
+  const BIG_CLUBS = new Set(["Real Madrid", "FC Barcelona", "Manchester United", "Bayern Munich", "Juventus", "Paris Saint-Germain", "Liverpool FC", "AC Milan", "Ajax", "Boca Juniors"]);
+  lookup({ family: "club-country", category: "sports", rows: CLUBS, stem: (x) => x[0], diff: (x) => (BIG_CLUBS.has(x[0]) ? "easy" : "medium"),
+    text: (x) => [`Which country is the football club ${x[0]} from?`, `¿De qué país es el club de fútbol ${x[1]}?`, `Aus welchem Land kommt der Fußballverein ${x[2]}?`],
+    right: (x) => byId.get(x[3])!, pool: known, label: nameOf, ok: (x, c) => c.id !== x[3] });
+  which({ family: "club-rev", category: "sports", rows: CLUBS, per: 10, diff: "medium", key: (x) => x[3], label: (x) => [x[0], x[1], x[2]],
+    text: (k) => { const c = byId.get(k)!; return [`Which of these football clubs is from ${c.enSubj}?`, `¿Cuál de estos clubes de fútbol es ${c.esDe}?`, `Welcher dieser Fußballvereine kommt ${deAus(c)}?`]; } });
+  lookup({ family: "tournament-sport", category: "sports", rows: TOURNAMENTS, stem: (x) => x[0], diff: () => "medium",
+    text: (x) => [`Which sport is ${x[0]} part of?`, `¿A qué deporte pertenece ${x[1]}?`, `Zu welcher Sportart gehört ${x[2]}?`],
+    right: (x) => x[3], pool: sportKeys, label: (k) => SPORTS[k] });
+  which({ family: "tournament-rev", category: "sports", rows: TOURNAMENTS, per: 6, diff: "medium", key: (x) => x[3], label: (x) => capL([x[0], x[1], x[2]]),
+    text: (k) => [`Which of these competitions belongs to ${sportIn(k)}?`, `¿Cuál de estas competiciones es de este deporte: ${low(SPORTS[k][1])}?`, `Welcher dieser Wettbewerbe gehört zur Sportart „${SPORTS[k][2]}“?`] });
+  const rt = rngFor("team-size");
+  for (const [en, es, de, n] of TEAM_SIZES) {
+    for (let v = 0; v < 3; v++) {
+      const vals = new Set<number>();
+      while (vals.size < 3) {
+        const x = n + Math.round((rt() * 2 - 1) * 4);
+        if (x !== n && x >= 1 && x <= 16) vals.add(x);
+      }
+      add("team-size", en, "sports", n === 11 || n === 5 ? "medium" : "hard",
+        [`${en}: how many players does each team have in play at the same time?`, `${es}: ¿cuántos jugadores tiene cada equipo en juego a la vez?`, `${de}: Wie viele Spieler hat jede Mannschaft gleichzeitig im Spiel?`],
+        same(String(n)), [...vals].map((x) => same(String(x))));
+    }
+  }
+
+  // ── food & drink ──
+  const FAMOUS_DISHES = new Set(["Paella", "Sushi", "Pizza Margherita", "Tacos", "Fish and chips", "Croissant", "Lasagne", "Tiramisu", "Kimchi", "Guacamole", "Döner kebab"]);
+  const foodPool = COUNTRIES.filter((c) => c.pop >= 5);
+  for (const [rows, fam, en, es, de] of [
+    [DISHES, "dish", "the dish", "el plato", "das Gericht"],
+    [CHEESES, "cheese", "the cheese", "el queso", "der Käse"],
+    [DRINKS, "drink", "", "", ""],
+  ] as const) {
+    lookup({ family: `${fam}-country`, category: "food", rows: rows as unknown as [string, string, string, string, string[]?][], stem: (x) => x[0], diff: (x) => (FAMOUS_DISHES.has(x[0]) ? "easy" : "medium"),
+      text: (x) => fam === "drink"
+        ? [`Which country does ${x[0]} come from?`, `¿De qué país procede ${low(x[1])}?`, `Aus welchem Land stammt ${x[2]}?`]
+        : [`Which country does ${en} ${x[0]} come from?`, `¿De qué país es ${es} ${x[1]}?`, `Aus welchem Land stammt ${de} ${x[2]}?`],
+      right: (x) => byId.get(x[3])!, pool: foodPool, label: nameOf, ok: (x, c) => c.id !== x[3] && !(x[4] ?? []).includes(c.id) });
+    const word: Record<string, L> = { dish: ["dishes", "platos", "Gerichte"], cheese: ["cheeses", "quesos", "Käsesorten"], drink: ["drinks", "bebidas", "Getränke"] };
+    which({ family: `${fam}-rev`, category: "food", rows: rows as unknown as [string, string, string, string, string[]?][], per: 18, diff: "medium", key: (x) => x[3], label: (x) => [x[0], x[1], x[2]],
+      text: (k) => { const c = byId.get(k)!; const w = word[fam]; return [`Which of these ${w[0]} comes from ${c.enSubj}?`, `¿Cuál de ${fam === "drink" ? "estas" : "estos"} ${w[1]} es ${c.esDe}?`, `Welche${fam === "dish" ? "s" : fam === "cheese" ? "" : "s"} dieser ${w[2]} stammt ${deAus(c)}?`]; },
+      ok: (_, c, k) => !(c[4] ?? []).includes(k) });
+  }
+  lookup({ family: "made-from", category: "food", rows: MADE_FROM, stem: (x) => x[0], diff: () => "easy",
+    text: (x) => [`What is the main ingredient of ${x[0]}?`, `¿Cuál es el ingrediente principal de este alimento: ${x[1]}?`, `Was ist die Hauptzutat von ${x[2]}?`],
+    right: (x) => x[3], pool: Object.keys(INGREDIENTS), label: (k) => INGREDIENTS[k], ok: (x, k) => !(x[4] ?? []).includes(k) });
+  which({ family: "made-from-rev", category: "food", rows: MADE_FROM, per: 22, diff: "medium", key: (x) => x[3], label: (x) => [x[0], x[1], x[2]],
+    text: (k) => [`Which of these is made mainly from ${low(INGREDIENTS[k][0])}?`, `¿Cuál de estos se elabora principalmente con ${low(INGREDIENTS[k][1])}?`, `Was davon wird hauptsächlich aus ${INGREDIENTS[k][2]} hergestellt?`],
+    ok: (_, c, k) => !(c[4] ?? []).includes(k) });
+  groupYesNo("is-fruit", "food", 700, FRUITS, VEGETABLES, "easy",
+    ["Which of these is a fruit?", "¿Cuál de estos alimentos es una fruta?", "Was davon ist Obst?"]);
+  groupYesNo("is-vegetable", "food", 700, VEGETABLES, FRUITS, "easy",
+    ["Which of these is a vegetable?", "¿Cuál de estos alimentos es una verdura?", "Was davon ist Gemüse?"]);
+
+  // ── nature & animals ──
+  lookup({ family: "animal-home", category: "nature", rows: ANIMAL_HOMES, variants: 2, stem: (x) => x[0], diff: () => "easy",
+    text: (x) => [`Which continent is the ${x[0]} originally native to?`, `¿De qué continente es originario este animal: ${x[1]}?`, `Auf welchem Kontinent ist dieses Tier ursprünglich heimisch: ${x[2]}?`],
+    right: (x) => x[3], pool: contKeys, label: contL });
+  which({ family: "animal-home-rev", category: "nature", rows: ANIMAL_HOMES, per: 40, diff: "easy", key: (x) => x[3], label: (x) => capL([x[0], x[1], x[2]]),
+    text: (k) => { const c = CONTINENTS[k as Continent]; return [`Which of these animals is originally native to ${c[0]}?`, `¿Cuál de estos animales es originario de ${c[1]}?`, `Welches dieser Tiere ist ursprünglich in ${c[2]} heimisch?`]; } });
+  const extreme = (family: string, n: number, rows: [string, string, string, number][], max: boolean, ratio: number, text: L) => {
+    const r = rngFor(family);
+    for (let made = 0, tries = 0; made < n && tries < n * 30; tries++) {
+      const set = sample(r, rows, 4)!;
+      const sorted = [...set].sort((a, b) => (max ? b[3] - a[3] : a[3] - b[3]));
+      const ok = ratio > 0 ? (max ? sorted[0][3] / sorted[1][3] : sorted[1][3] / sorted[0][3]) >= ratio : sorted[0][3] !== sorted[1][3];
+      if (!ok) continue;
+      const before = out.length;
+      add(family, sorted.map((x) => x[0]).sort().join("+"), "nature", ratio > 0 && (max ? sorted[0][3] / sorted[1][3] : sorted[1][3] / sorted[0][3]) >= 10 ? "easy" : "medium",
+        text, [sorted[0][0], sorted[0][1], sorted[0][2]], sorted.slice(1).map((x) => [x[0], x[1], x[2]] as L));
+      if (out.length > before) made++;
+    }
+  };
+  extreme("heaviest", 900, ANIMAL_MASS, true, 3, ["Which of these animals is the heaviest as an adult?", "¿Cuál de estos animales es el más pesado de adulto?", "Welches dieser Tiere ist ausgewachsen am schwersten?"]);
+  extreme("lightest", 700, ANIMAL_MASS, false, 3, ["Which of these animals is the lightest as an adult?", "¿Cuál de estos animales es el más ligero de adulto?", "Welches dieser Tiere ist ausgewachsen am leichtesten?"]);
+  extreme("most-legs", 350, ANIMAL_LEGS, true, 0, ["Which of these animals has the most legs?", "¿Cuál de estos animales tiene más patas?", "Welches dieser Tiere hat die meisten Beine?"]);
+  extreme("fewest-legs", 250, ANIMAL_LEGS, false, 0, ["Which of these animals has the fewest legs?", "¿Cuál de estos animales tiene menos patas?", "Welches dieser Tiere hat die wenigsten Beine?"]);
+  groupYesNo("herbivore", "nature", 300, HERBIVORES, CARNIVORES, "easy",
+    ["Which of these animals is a herbivore (eats only plants)?", "¿Cuál de estos animales es herbívoro (solo come plantas)?", "Welches dieser Tiere ist ein Pflanzenfresser?"]);
+  groupYesNo("carnivore", "nature", 300, CARNIVORES, HERBIVORES, "easy",
+    ["Which of these animals is a carnivore (eats meat)?", "¿Cuál de estos animales es carnívoro (come carne)?", "Welches dieser Tiere ist ein Fleischfresser?"]);
+  groupYesNo("conifer", "nature", 200, CONIFERS, BROADLEAF, "medium",
+    ["Which of these trees is a conifer?", "¿Cuál de estos árboles es una conífera?", "Welcher dieser Bäume ist ein Nadelbaum?"]);
+  groupYesNo("broadleaf", "nature", 200, BROADLEAF, CONIFERS, "medium",
+    ["Which of these trees is a broadleaf tree?", "¿Cuál de estos árboles es de hoja ancha?", "Welcher dieser Bäume ist ein Laubbaum?"]);
+}
+
 let cache: StoredQuestion[] | null = null;
 
 /** All generated questions (built once, deterministic). */
@@ -802,6 +1088,7 @@ export function generatedQuestions(): StoredQuestion[] {
     people();
     reverse();
     more();
+    extra();
     cache = out;
   }
   return cache;

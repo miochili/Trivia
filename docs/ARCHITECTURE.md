@@ -47,7 +47,7 @@ trivia-quest/
 │   ├── game/board.ts            board generator (HQ trophy tiles, specials)
 │   ├── questions/QuestionBank.ts   interface + InMemory / Prisma implementations
 │   ├── questions/seedQuestions.ts  85 hand-written questions × EN/ES/DE
-│   ├── questions/gen/              ~30,700 generated questions, 67 kinds (fact tables → EN/ES/DE templates)
+│   ├── questions/gen/              ~45,200 generated questions, 125 kinds (fact tables → EN/ES/DE templates)
 │   ├── persistence/GamePersistence.ts  Noop + Prisma (serialised per room)
 │   └── lib/                     ids & tokens, token-bucket rate limiter, prisma loader
 ├── src/
