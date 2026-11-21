@@ -4,7 +4,12 @@ A multiplayer board-game trivia site with an old tavern feel: a parchment sea ch
 
 - **Circular board.** Tiles run around a ring, starting at the top, with Finish right beside Start. In "All trophies" mode you keep going round and earn a lap bonus.
 - **Characters.** Type your name and tap one of 16 little characters (🧙 🧝 🤴 👸 🥷 🤠 🦊 🐻 🦉 🐸 …). Both are remembered for next time.
-- **Teams.** Each team has a banner and crest (Leo 🦁, Aquila 🦅, Lupus 🐺, Draco 🐉, Ursus 🐻, Vulpes 🦊), and teammates take turns rolling and answering. **Team huddle:** while one teammate answers, the others can tap answers to suggest them, and their characters appear on those options.
+- **Teams.** Each team has a banner and crest (Leo 🦁, Aquila 🦅, Lupus 🐺, Draco 🐉, Ursus 🐻, Vulpes 🦊), and teammates take turns rolling. The host picks how a team answers:
+  - **Team vote** (default): everyone in the team taps an answer and the majority wins. A tie goes to the player whose turn it is.
+  - **One player decides:** the player whose turn it is answers, and teammates can tap to suggest.
+- **Steals ⚡.** After a wrong answer, every other team or player gets 10 seconds to tap the right one, worth half the points. Each team gets one try.
+- **Hot streak 🔥.** From the 3rd correct answer in a row, each correct answer earns +100 bonus points.
+- **Reactions.** 👏 😂 😱 🔥 🤔 🎉 float up over everyone's screen, even while a question is open.
 - **Easy room codes.** Codes are six letters that are easy to say out loud (KOBALI, MIRETO…), with no digits.
 - **Reconnect-safe.** Reload or lose signal and you're put back in your seat.
 

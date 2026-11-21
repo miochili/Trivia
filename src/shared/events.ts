@@ -33,6 +33,7 @@ export const C2S = {
   AUTO_BALANCE_TEAMS: "AUTO_BALANCE_TEAMS",
   SET_READY: "SET_READY",
   SET_AVATAR: "SET_AVATAR",
+  REACT: "REACT",
   KICK_PLAYER: "KICK_PLAYER",
   START_GAME: "START_GAME",
   ROLL_DICE: "ROLL_DICE",
@@ -54,6 +55,7 @@ export const S2C = {
   GAME_OVER: "GAME_OVER",
   KICKED: "KICKED",
   SESSION_REPLACED: "SESSION_REPLACED",
+  REACTION: "REACTION",
 } as const;
 
 export interface SessionInfo {
@@ -119,6 +121,12 @@ export interface SpecialTileEvent {
   params: Record<string, string | number>;
   swappedWithSideId?: string;
 }
+export interface ReactionEvent {
+  id: number;
+  playerId: string;
+  emoji: string;
+}
+
 export interface GameOverEvent {
   winnerSideId: string;
   reason: WinReason;
@@ -138,6 +146,7 @@ export interface ClientToServerEvents {
   [C2S.AUTO_BALANCE_TEAMS]: (p: { teamCount?: number }, ack: (r: Ack) => void) => void;
   [C2S.SET_READY]: (p: { ready: boolean }, ack: (r: Ack) => void) => void;
   [C2S.SET_AVATAR]: (p: { avatar: string }, ack: (r: Ack) => void) => void;
+  [C2S.REACT]: (p: { emoji: string }, ack: (r: Ack) => void) => void;
   [C2S.KICK_PLAYER]: (p: { playerId: string }, ack: (r: Ack) => void) => void;
   [C2S.START_GAME]: (p: Record<string, never>, ack: (r: Ack) => void) => void;
   [C2S.ROLL_DICE]: (p: Record<string, never>, ack: (r: Ack<{ value: number }>) => void) => void;
@@ -158,6 +167,7 @@ export interface ServerToClientEvents {
   [S2C.GAME_OVER]: (e: GameOverEvent) => void;
   [S2C.KICKED]: (e: { reason: string }) => void;
   [S2C.SESSION_REPLACED]: () => void;
+  [S2C.REACTION]: (e: ReactionEvent) => void;
 }
 
 /** Union of server→client cue events that the engine emits (ROOM_STATE is sent by the room). */

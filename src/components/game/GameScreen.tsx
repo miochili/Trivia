@@ -12,6 +12,7 @@ import { Dice } from "./Dice";
 import { GameBoard } from "./GameBoard";
 import { GameOverModal } from "./GameOverModal";
 import { TriviaModal } from "./TriviaModal";
+import { ReactionBar, ReactionLayer } from "./Reactions";
 
 export function GameScreen() {
   const room = useGame((s) => s.state)!;
@@ -19,7 +20,7 @@ export function GameScreen() {
   const { t } = useT();
 
   return (
-    <main className="mx-auto max-w-[1440px] px-2 pb-10 pt-3 md:px-6">
+    <main className="mx-auto max-w-[1440px] px-2 pb-24 pt-3 md:px-6">
       <header className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
         <div className="flex items-baseline gap-4">
           <h1 className="font-display text-3xl text-vellum drop-shadow-[0_2px_0_rgb(0_0_0/.5)]">{t("app.title")}</h1>
@@ -44,6 +45,8 @@ export function GameScreen() {
 
       <TriviaModal room={room} game={game} />
       <GameOverModal room={room} game={game} />
+      <ReactionLayer room={room} />
+      <ReactionBar />
     </main>
   );
 }
@@ -75,6 +78,7 @@ function BoardCenter({ room, game }: { room: PublicRoomState; game: PublicGameSt
     else status = t("game.waitingRoll", { name: active.name });
   } else if (game.phase === "moving") status = t("game.rolling", { side: side.name });
   else if (game.phase === "question") status = t("game.answering", { name: active?.name ?? side.name });
+  else if (game.phase === "steal") status = t("game.stealing");
   else {
     const last = game.log[game.log.length - 1];
     status = last ? t(last.key, last.params) : "";
@@ -151,6 +155,7 @@ function Scoreboard({ room, game }: { room: PublicRoomState; game: PublicGameSta
                     </span>
                   ))}
                 </span>
+                {s.streak >= 2 && <span className="font-bold text-[#b5612b]">{t("game.streak", { n: s.streak })}</span>}
                 {s.skipNextTurn && <span className="text-rust">⛓️ {t("game.skipsNext")}</span>}
                 {s.doublePoints && <span className="font-bold text-brass-dark">💰 {t("game.double")}</span>}
               </div>

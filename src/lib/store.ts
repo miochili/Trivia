@@ -16,6 +16,7 @@ interface GameStore {
   displayPos: Record<string, number>;
   dice: { value: number; rollId: number; sideId: string } | null;
   banner: (SpecialTileEvent & { key: number }) | null;
+  reactions: { id: number; playerId: string; emoji: string; x: number }[];
   notice: string | null;
   setPlayer: (id: string | null) => void;
   applyState: (s: PublicRoomState) => void;
@@ -34,6 +35,7 @@ export const useGame = create<GameStore>((set, get) => ({
   displayPos: {},
   dice: null,
   banner: null,
+  reactions: [],
   notice: null,
   setPlayer: (playerId) => set({ playerId }),
   setNotice: (notice) => set({ notice }),
@@ -92,6 +94,11 @@ export function wireSocketToStore() {
     setTimeout(() => {
       if (useGame.getState().banner?.key === key) st({ banner: null });
     }, 2200);
+  });
+  hub.on(S2C.REACTION, (e: { id: number; playerId: string; emoji: string }) => {
+    const r = { ...e, x: 8 + Math.random() * 84 };
+    st((s) => ({ reactions: [...s.reactions.slice(-14), r] }));
+    setTimeout(() => st((s) => ({ reactions: s.reactions.filter((x) => x !== r) })), 2800);
   });
   hub.on(S2C.KICKED, (e: { reason: string }) => st({ notice: e.reason, state: null }));
   hub.on(S2C.SESSION_REPLACED, () => st({ notice: "room.replaced" }));

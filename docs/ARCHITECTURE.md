@@ -124,8 +124,11 @@ Every client→server event takes an **ack callback** and gets back `{ ok: true,
 | `START_GAME` | `{}` | host | Needs ≥2 sides and everyone ready; loads the question pool, builds the board |
 | `ROLL_DICE` | `{}` | **active player only**, phase `awaiting_roll` | Server rolls (`crypto.randomInt`) → `{ value }` |
 | `SUBMIT_ANSWER` | `{ questionId, optionIndex }` | **current answerer only**, phase `question`, before the deadline (+600 ms grace), once | Server checks the answer |
+| `REACT` | `{ emoji }` (one of 6) | member | Broadcast as `REACTION` (throttled to one every 400 ms per player) |
 | `SUGGEST_ANSWER` | `{ questionId, optionIndex }` | **teammates of the answering team** (not the answerer) | Team huddle: advisory only. It shows on the card as the teammate's character; tapping the same option again withdraws it |
 | `RETURN_TO_LOBBY` | `{}` | host, after game over | Keeps players and teams |
+
+**`SUBMIT_ANSWER` in the team modes.** In *vote* mode, every member of the answering team may submit; each submission is a vote and can be changed. The question resolves once everyone online has voted, or when time runs out (the votes cast so far count). Majority wins, and a tie goes to the player on turn. In the **steal** phase (`phase: "steal"`), any player from another side may submit once for their side. The first correct pick wins half the points. The correct answer stays secret until the steal ends.
 
 ### Server → Client
 
@@ -138,6 +141,7 @@ Every client→server event takes an **ack callback** and gets back `{ ok: true,
 | `TURN_SKIPPED` | `{ sideId, reason: lose_turn\|no_connected_players }` | |
 | `QUESTION` | `ActiveQuestionView + serverNow` — shuffled options in every language, **no answer** | Opens the trivia card |
 | `ANSWER_RESULT` | `{ chosenIndex, correctIndex, correct, timedOut, points, trophy }` | The answer is revealed only now |
+| `REACTION` | `{ id, playerId, emoji }` | Floating emoji |
 | `SPECIAL_TILE` | `{ type, detailKey, params, swappedWithSideId? }` | Banner (translated on the client) |
 | `GAME_OVER` | `{ winnerSideId, reason, standings[] }` | |
 | `KICKED` / `SESSION_REPLACED` | | The seat was taken away, or opened in another tab |

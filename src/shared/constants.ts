@@ -11,6 +11,8 @@ export const TIMING = {
   SPECIAL_REVEAL_MS: 1800,
   ANSWER_REVEAL_MS: 2600,
   SKIP_TURN_MS: 1600,
+  /** How long the other sides get to steal a wrongly answered question. */
+  STEAL_MS: 10_000,
   /** Grace for network latency on answer submission after the deadline. */
   ANSWER_GRACE_MS: 600,
   /** Active-but-idle player gets auto-rolled after this. */
@@ -25,6 +27,11 @@ export const TIMING = {
 
 export const POINTS: Record<Difficulty, number> = { easy: 100, medium: 200, hard: 300 };
 export const BONUS_MOVE_STEPS = 2;
+/** From the 3rd correct answer in a row, each correct answer earns this bonus. */
+export const STREAK_BONUS = 100;
+export const STREAK_HOT = 3;
+/** Quick emoji reactions players can throw onto the board. */
+export const REACTIONS = ["👏", "😂", "😱", "🔥", "🤔", "🎉"] as const;
 export const LAP_BONUS = 150;
 
 /** Vintage pigment palette — ochre, verdigris, madder, sienna, plum, prussian. */

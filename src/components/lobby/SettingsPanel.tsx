@@ -39,6 +39,34 @@ export function SettingsPanel() {
           />
         </Field>
 
+        {s.mode === "teams" && (
+          <Field label={t("settings.teamAnswer")} hint={t(s.teamAnswer === "vote" ? "settings.voteHint" : "settings.captainHint")}>
+            <Segmented
+              label={t("settings.teamAnswer")}
+              value={s.teamAnswer}
+              disabled={!isHost}
+              onChange={(teamAnswer) => set({ teamAnswer })}
+              options={[
+                { value: "vote", label: t("settings.vote") },
+                { value: "captain", label: t("settings.captain") },
+              ]}
+            />
+          </Field>
+        )}
+
+        <Field label={t("settings.steals")} hint={t("settings.stealsHint")}>
+          <Segmented
+            label={t("settings.steals")}
+            value={s.steals ? "on" : "off"}
+            disabled={!isHost}
+            onChange={(v) => set({ steals: v === "on" })}
+            options={[
+              { value: "on", label: t("settings.on") },
+              { value: "off", label: t("settings.off") },
+            ]}
+          />
+        </Field>
+
         <Field label={t("settings.boardLength")} hint={t("settings.boardHint")}>
           <Segmented
             label={t("settings.boardLength")}

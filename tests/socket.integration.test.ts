@@ -109,8 +109,14 @@ describe("socket protocol end-to-end", () => {
       expect(JSON.stringify(questions)).not.toMatch(/correct/i);
       expect(await call(idle, C2S.SUBMIT_ANSWER, { questionId: q.question.id, optionIndex: 0 })).toMatchObject({ ok: false });
       expect(await call(active, C2S.SUBMIT_ANSWER, { questionId: q.question.id, optionIndex: 0 })).toMatchObject({ ok: true });
-      await until(() => hostState().game!.lastReveal !== null);
-      expect(hostState().game!.lastReveal!.correctIndex).toBeTypeOf("number");
+      await until(() => hostState().game!.lastReveal !== null || hostState().game!.phase === "steal");
+      if (hostState().game!.phase === "steal") {
+        // wrong answer → steal window; the right answer must still be secret
+        expect(hostState().game!.lastReveal).toBeNull();
+        expect(JSON.stringify(hostState().game!.activeQuestion)).not.toMatch(/correct/i);
+      } else {
+        expect(hostState().game!.lastReveal!.correctIndex).toBeTypeOf("number");
+      }
     }
 
     // ── reconnection: guest drops and rejoins with its session token ──

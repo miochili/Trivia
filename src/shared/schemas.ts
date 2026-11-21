@@ -4,7 +4,7 @@
  */
 import { z } from "zod";
 import { BOARD_LENGTHS, CATEGORY_IDS, QUESTION_TIMERS } from "./types";
-import { AVATARS } from "./constants";
+import { AVATARS, REACTIONS } from "./constants";
 
 const name = z
   .string()
@@ -32,6 +32,8 @@ export const settingsPatchSchema = z
     categories: z.array(z.enum(CATEGORY_IDS)).min(2, "Pick at least 2 categories").max(CATEGORY_IDS.length),
     winCondition: z.enum(["finish", "trophies", "either"]),
     correctAnswerRule: z.enum(["stay", "bonus_move", "roll_again"]),
+    teamAnswer: z.enum(["vote", "captain"]),
+    steals: z.boolean(),
     maxPlayers: z.number().int().min(2).max(16),
   })
   .partial()
@@ -41,6 +43,7 @@ export const schemas = {
   createRoom: z.object({ name, clientId, avatar: avatar.optional(), settings: settingsPatchSchema.optional() }),
   joinRoom: z.object({ roomCode, name, clientId, avatar: avatar.optional() }),
   setAvatar: z.object({ avatar }),
+  react: z.object({ emoji: z.enum(REACTIONS) }),
   rejoinRoom: z.object({ roomCode, sessionToken: z.string().min(20).max(128) }),
   empty: z.object({}).passthrough(),
   updateSettings: settingsPatchSchema,

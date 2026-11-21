@@ -93,6 +93,10 @@ export function createDispatcher(manager: RoomManager, opts: DispatchOptions = {
       const { room, playerId } = ctx(conn);
       room.setAvatar(playerId, avatar);
     }),
+    [C2S.REACT]: h(schemas.react, (conn, { emoji }) => {
+      const { room, playerId } = ctx(conn);
+      room.react(playerId, emoji);
+    }),
     [C2S.KICK_PLAYER]: h(schemas.kick, (conn, { playerId: target }) => {
       const { room, playerId } = ctx(conn);
       manager.kickConn(room.kick(playerId, target), room.code);

@@ -35,6 +35,10 @@ export interface GameSettings {
   categories: CategoryId[];
   winCondition: WinCondition;
   correctAnswerRule: CorrectAnswerRule;
+  /** Team mode: everyone votes (majority wins) or the player on turn decides. */
+  teamAnswer: "vote" | "captain";
+  /** After a wrong answer, the other sides may steal it for half the points. */
+  steals: boolean;
   maxPlayers: number;
 }
 
@@ -45,6 +49,8 @@ export const DEFAULT_SETTINGS: GameSettings = {
   categories: [...CATEGORY_IDS],
   winCondition: "either",
   correctAnswerRule: "stay",
+  teamAnswer: "vote",
+  steals: true,
   maxPlayers: 12,
 };
 
@@ -84,12 +90,15 @@ export interface PublicSide {
   doublePoints: boolean;
   correct: number;
   answered: number;
+  /** Correct answers in a row (3+ = on fire, bonus points). */
+  streak: number;
 }
 
 export type GamePhase =
   | "awaiting_roll" // active player may roll
   | "moving" // dice + pawn animation running
   | "question" // trivia card open, timer running
+  | "steal" // the answer was wrong; other sides race to steal it
   | "resolving" // showing answer result / special tile effect
   | "game_over";
 
@@ -119,8 +128,20 @@ export interface ActiveQuestionView {
   endsAt: number;
   hq: boolean;
   doublePoints: boolean;
-  /** Team huddle: teammates' suggested option index, keyed by player id. */
+  /** "solo": one player; "captain": answerer decides, teammates suggest; "vote": majority of the team. */
+  answerMode: "solo" | "captain" | "vote";
+  /** Captain mode: suggestions · Vote mode: votes — option index keyed by player id. */
   suggestions: Record<string, number>;
+  /** Open steal window after a wrong answer. */
+  steal: StealView | null;
+}
+
+export interface StealView {
+  endsAt: number;
+  /** The option the answering side chose (known wrong), or null on timeout. */
+  wrongIndex: number | null;
+  /** One attempt per side: who tried and which option. */
+  attempts: Record<string, { playerId: string; index: number }>;
 }
 
 export interface AnswerReveal {
@@ -133,6 +154,9 @@ export interface AnswerReveal {
   timedOut: boolean;
   points: number;
   trophy: CategoryId | null;
+  /** Streak bonus included in `points`. */
+  streakBonus: number;
+  stolenBy: { sideId: string; playerId: string; points: number } | null;
 }
 
 export interface LogEntry {

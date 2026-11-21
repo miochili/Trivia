@@ -272,6 +272,18 @@ export class Room {
     this.queueBroadcast();
   }
 
+  private lastReaction = new Map<string, number>();
+  private reactionSeq = 0;
+
+  /** Emoji reaction thrown onto everyone's board (lightly throttled per player). */
+  react(byId: string, emoji: string) {
+    this.mustGet(byId);
+    const now = Date.now();
+    if (now - (this.lastReaction.get(byId) ?? 0) < 400) throw new GameError("err.slowDown");
+    this.lastReaction.set(byId, now);
+    this.deps.broadcast(S2C.REACTION, { id: ++this.reactionSeq, playerId: byId, emoji });
+  }
+
   setReady(byId: string, ready: boolean) {
     this.requireLobby();
     this.mustGet(byId).ready = ready;

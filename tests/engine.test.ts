@@ -41,7 +41,7 @@ function setup(opts: {
   }));
   const engine = new GameEngine({
     roomCode: "TEST01",
-    settings: { ...DEFAULT_SETTINGS, categories: ["science", "history", "art"], ...opts.settings },
+    settings: { ...DEFAULT_SETTINGS, categories: ["science", "history", "art"], steals: false, teamAnswer: "captain", ...opts.settings },
     sides,
     pool,
     board: opts.tiles,
@@ -365,5 +365,100 @@ describe("teams & connectivity", () => {
     g.engine.handleConnectivityChange();
     vi.advanceTimersByTime(TIMING.ROLL_IDLE_MS * 3);
     expect(g.st()).toMatchObject({ currentSideId: "B", phase: "awaiting_roll", activePlayerId: null, autoActionAt: null });
+  });
+});
+
+describe("team fun: votes, steals, streaks", () => {
+  const twoTeams = [
+    { id: "RED", members: ["r1", "r2", "r3"] },
+    { id: "BLUE", members: ["b1", "b2"] },
+  ];
+
+  it("team vote: majority decides, resolves once everyone online has voted", () => {
+    const g = setup({ tiles: board(Array(8).fill(C)), rolls: [1], sides: twoTeams, settings: { teamAnswer: "vote" } });
+    g.engine.start();
+    g.engine.roll("r1");
+    g.settleMove(1);
+    const q = g.st().activeQuestion!;
+    expect(q.answerMode).toBe("vote");
+    const right = g.rightIndex();
+    const wrong = g.wrongIndex();
+    g.engine.submitAnswer("r1", q.question.id, wrong); // captain wrong…
+    g.engine.submitAnswer("r2", q.question.id, right);
+    expect(g.st().phase).toBe("question"); // still waiting on r3
+    expect(() => g.engine.submitAnswer("b1", q.question.id, right)).toThrow(/teammates/);
+    g.engine.submitAnswer("r3", q.question.id, right); // …but outvoted 2–1
+    expect(g.st().lastReveal).toMatchObject({ correct: true, chosenIndex: right });
+  });
+
+  it("team vote: a tie goes to the player on turn; timeout uses the votes cast", () => {
+    const g = setup({ tiles: board(Array(8).fill(C)), rolls: [1], sides: [{ id: "RED", members: ["r1", "r2"] }, { id: "BLUE", members: ["b1"] }], settings: { teamAnswer: "vote", questionTimerSec: 15, steals: false } });
+    g.engine.start();
+    g.engine.roll("r1");
+    g.settleMove(1);
+    const id = g.st().activeQuestion!.question.id;
+    g.engine.submitAnswer("r2", id, g.wrongIndex());
+    vi.advanceTimersByTime(15_000 + TIMING.ANSWER_GRACE_MS + 1); // r1 never votes
+    expect(g.st().lastReveal).toMatchObject({ correct: false, timedOut: false });
+  });
+
+  it("steal: a wrong answer opens a steal window; first correct steal takes half points", () => {
+    const g = setup({ tiles: board(Array(8).fill(C)), rolls: [1], sides: twoTeams, settings: { teamAnswer: "captain", steals: true } });
+    g.engine.start();
+    g.engine.roll("r1");
+    g.settleMove(1);
+    const id = g.st().activeQuestion!.question.id;
+    const wrong = g.wrongIndex();
+    const right = g.rightIndex();
+    g.engine.submitAnswer("r1", id, wrong);
+    expect(g.st().phase).toBe("steal");
+    expect(g.st().lastReveal).toBeNull(); // the answer is still secret
+    expect(g.st().activeQuestion!.steal).toMatchObject({ wrongIndex: wrong });
+    expect(() => g.engine.submitAnswer("r2", id, right)).toThrow(/own team/);
+    expect(() => g.engine.submitAnswer("b1", id, wrong)).toThrow(/Invalid option/);
+    g.engine.submitAnswer("b2", id, right);
+    expect(g.st().lastReveal).toMatchObject({ correct: false, stolenBy: { sideId: "BLUE", playerId: "b2", points: POINTS.easy / 2 } });
+    expect(g.side("BLUE").score).toBe(POINTS.easy / 2);
+    vi.advanceTimersByTime(TIMING.ANSWER_REVEAL_MS + TIMING.STEP_MS + TIMING.LAND_PAUSE_MS + 2);
+    expect(g.side("RED").position).toBe(0); // still pushed back
+    expect(g.st().currentSideId).toBe("BLUE");
+  });
+
+  it("steal: one try per side; ends early when every side missed", () => {
+    const g = setup({ tiles: board(Array(8).fill(C)), rolls: [1], sides: twoTeams, settings: { teamAnswer: "captain", steals: true } });
+    g.engine.start();
+    g.engine.roll("r1");
+    g.settleMove(1);
+    const id = g.st().activeQuestion!.question.id;
+    const opts = g.st().activeQuestion!.question.options;
+    const wrongs = opts.map((o, i) => (o === "RIGHT" ? -1 : i)).filter((i) => i >= 0);
+    g.engine.submitAnswer("r1", id, wrongs[0]);
+    g.engine.submitAnswer("b1", id, wrongs[1]);
+    expect(g.st().lastReveal).toMatchObject({ stolenBy: null }); // BLUE was the only other side
+    expect(g.side("BLUE").score).toBe(0);
+  });
+
+  it("streak: third correct answer in a row earns the bonus, a miss resets it", () => {
+    const g = setup({ tiles: board(Array(14).fill(C)), rolls: [1, 1, 1, 1, 1, 1, 1, 1], settings: { correctAnswerRule: "stay" } });
+    g.engine.start();
+    const bonuses: number[] = [];
+    const turn = (pid: string, ok: boolean) => {
+      g.engine.roll(pid);
+      g.settleMove(1);
+      g.engine.submitAnswer(pid, g.st().activeQuestion!.question.id, ok ? g.rightIndex() : g.wrongIndex());
+      if (ok) bonuses.push(g.st().lastReveal!.streakBonus);
+      if (g.st().phase === "steal") vi.advanceTimersByTime(TIMING.STEAL_MS + TIMING.ANSWER_GRACE_MS + 1);
+      vi.advanceTimersByTime(TIMING.ANSWER_REVEAL_MS + TIMING.STEP_MS + TIMING.LAND_PAUSE_MS + 2);
+    };
+    turn("a", true);
+    turn("b", false);
+    turn("a", true);
+    turn("b", false);
+    turn("a", true); // 3rd in a row
+    expect(g.side("A").streak).toBe(3);
+    expect(bonuses).toEqual([0, 0, 100]);
+    turn("b", false);
+    turn("a", false);
+    expect(g.side("A").streak).toBe(0);
   });
 });

@@ -1,5 +1,5 @@
 import { secureInt } from "../lib/ids";
-import { BONUS_MOVE_STEPS, LAP_BONUS, POINTS, TIMING } from "../../src/shared/constants";
+import { BONUS_MOVE_STEPS, LAP_BONUS, POINTS, STREAK_BONUS, STREAK_HOT, TIMING } from "../../src/shared/constants";
 import { S2C, type EngineEvent, type GameOverEvent, type MoveReason } from "../../src/shared/events";
 import type {
   ActiveQuestionView,
@@ -104,6 +104,7 @@ export class GameEngine {
   private rollSeq = 0;
   private askSeq = 0;
   private usedQuestionIds = new Set<string>();
+  private pendingWrong: { chosenIndex: number | null; timedOut: boolean } | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private disposed = false;
 
@@ -128,6 +129,7 @@ export class GameEngine {
       doublePoints: false,
       correct: 0,
       answered: 0,
+      streak: 0,
       rotation: 0,
     }));
   }
@@ -154,15 +156,53 @@ export class GameEngine {
     return this.doRoll(playerId, false);
   }
 
-  /** Answer the open question. `askId` must match the currently open card. */
+  /**
+   * Answer the open question. `askId` must match the currently open card.
+   *  - solo/captain: the answerer's pick resolves the question
+   *  - vote: each teammate's pick is a vote; resolves when everyone online voted
+   *  - steal phase: a player from another side tries to steal it
+   */
   submitAnswer(playerId: string, askId: string, optionIndex: number) {
     const aq = this.activeQuestion;
+    if (this.phase === "steal" && aq) return this.trySteal(playerId, askId, optionIndex);
     if (this.phase !== "question" || !aq) throw new GameError("err.noQuestionOpen");
     if (aq.view.question.id !== askId) throw new GameError("err.staleQuestion");
-    if (playerId !== aq.view.answererId) throw new GameError("err.notAnswerer");
     if (Date.now() > aq.view.endsAt + TIMING.ANSWER_GRACE_MS) throw new GameError("err.timeUp");
     if (optionIndex < 0 || optionIndex >= aq.view.question.options.length) throw new GameError("err.badOption");
+    if (aq.view.answerMode === "vote") {
+      if (!this.currentSide.memberIds.includes(playerId)) throw new GameError("err.notTeammate");
+      aq.view.suggestions[playerId] = optionIndex;
+      if (this.everyoneVoted()) return this.resolveVote();
+      this.changed();
+      return;
+    }
+    if (playerId !== aq.view.answererId) throw new GameError("err.notAnswerer");
     this.resolveAnswer(optionIndex, false);
+  }
+
+  private everyoneVoted() {
+    const online = this.currentSide.memberIds.filter((m) => this.deps.isConnected(m));
+    const votes = this.activeQuestion?.view.suggestions ?? {};
+    return online.length > 0 && online.every((m) => m in votes);
+  }
+
+  /** Majority wins; a tie goes to the player whose turn it is (if they voted for one of the tied options). */
+  private resolveVote() {
+    const aq = this.activeQuestion!;
+    const votes = Object.entries(aq.view.suggestions);
+    if (!votes.length) return this.resolveAnswer(null, true);
+    const counts = new Map<number, number>();
+    for (const [, i] of votes) counts.set(i, (counts.get(i) ?? 0) + 1);
+    const top = Math.max(...counts.values());
+    const tied = [...counts.entries()].filter(([, c]) => c === top).map(([i]) => i);
+    const captainPick = aq.view.answererId ? aq.view.suggestions[aq.view.answererId] : undefined;
+    const choice = captainPick !== undefined && tied.includes(captainPick) ? captainPick : tied[0];
+    this.resolveAnswer(choice, false);
+  }
+
+  private onQuestionTimeout() {
+    if (this.activeQuestion?.view.answerMode === "vote" && Object.keys(this.activeQuestion.view.suggestions).length) return this.resolveVote();
+    this.resolveAnswer(null, true);
   }
 
   /**
@@ -174,6 +214,7 @@ export class GameEngine {
     const aq = this.activeQuestion;
     if (this.phase !== "question" || !aq) throw new GameError("err.noQuestionOpen");
     if (aq.view.question.id !== askId) throw new GameError("err.staleQuestion");
+    if (aq.view.answerMode === "vote") return this.submitAnswer(playerId, askId, optionIndex);
     if (!this.currentSide.memberIds.includes(playerId) || playerId === aq.view.answererId) throw new GameError("err.notTeammate");
     if (optionIndex < 0 || optionIndex >= aq.view.question.options.length) throw new GameError("err.badOption");
     if (aq.view.suggestions[playerId] === optionIndex) delete aq.view.suggestions[playerId];
@@ -197,7 +238,10 @@ export class GameEngine {
         this.armRollTimer(); // may switch between "paused" and "skip soon"
         this.changed();
       }
+    } else if (this.phase === "steal") {
+      if (!this.stealCandidates().length) this.finishSteal(null);
     } else if (this.phase === "question" && this.activeQuestion) {
+      if (this.activeQuestion.view.answerMode === "vote" && this.everyoneVoted()) return this.resolveVote();
       const answerer = this.activeQuestion.view.answererId;
       if (!answerer || !this.deps.isConnected(answerer)) {
         const alt = this.pickActiveMember(side);
@@ -371,13 +415,15 @@ export class GameEngine {
       endsAt: now + this.settings.questionTimerSec * 1000,
       hq: !!tile.hq,
       doublePoints: side.doublePoints,
+      answerMode: side.memberIds.length < 2 ? "solo" : this.settings.teamAnswer === "captain" ? "captain" : "vote",
       suggestions: {},
+      steal: null,
     };
     this.activeQuestion = { stored, correctShuffledIndex: order.indexOf(stored.correctIndex), view, askedAt: now, tile };
     this.phase = "question";
     this.deps.emit({ type: S2C.QUESTION, payload: { ...structuredClone(view), serverNow: now } });
     this.changed();
-    this.schedule(this.settings.questionTimerSec * 1000 + TIMING.ANSWER_GRACE_MS, () => this.resolveAnswer(null, true));
+    this.schedule(this.settings.questionTimerSec * 1000 + TIMING.ANSWER_GRACE_MS, () => this.onQuestionTimeout());
   }
 
   private resolveAnswer(chosenIndex: number | null, timedOut: boolean) {
@@ -391,15 +437,42 @@ export class GameEngine {
     side.answered++;
 
     let points = 0;
+    let streakBonus = 0;
     let trophy: CategoryId | null = null;
     if (correct) {
       side.correct++;
-      points = POINTS[aq.stored.difficulty] * multiplier;
+      side.streak++;
+      streakBonus = side.streak >= STREAK_HOT ? STREAK_BONUS : 0;
+      points = POINTS[aq.stored.difficulty] * multiplier + streakBonus;
       side.score += points;
       if (aq.tile.hq && !side.trophies.includes(aq.view.question.category)) {
         trophy = aq.view.question.category;
         side.trophies.push(trophy);
       }
+    } else {
+      side.streak = 0;
+    }
+
+    void this.deps.persistence.answerRecorded({
+      code: this.deps.roomCode,
+      questionId: aq.stored.id,
+      clientId: aq.view.answererId ? this.deps.clientIdOf(aq.view.answererId) : null,
+      correct,
+      timedOut,
+      responseMs: Date.now() - aq.askedAt,
+    });
+
+    // Wrong → the other sides get a quick chance to steal it.
+    if (!correct && this.settings.steals && this.stealCandidates().length) {
+      const who = aq.view.answererId && aq.view.answerMode !== "vote" ? this.deps.nameOf(aq.view.answererId) : side.name;
+      this.pushLog(timedOut ? "log.timeout" : "log.wrong", { who }, "bad", side.id);
+      this.pushLog("log.stealChance", { side: side.name }, "special", side.id);
+      this.phase = "steal";
+      this.pendingWrong = { chosenIndex, timedOut };
+      aq.view.steal = { endsAt: Date.now() + TIMING.STEAL_MS, wrongIndex: chosenIndex, attempts: {} };
+      this.changed();
+      this.schedule(TIMING.STEAL_MS + TIMING.ANSWER_GRACE_MS, () => this.finishSteal(null));
+      return;
     }
 
     this.lastReveal = {
@@ -412,25 +485,19 @@ export class GameEngine {
       timedOut,
       points,
       trophy,
+      streakBonus,
+      stolenBy: null,
     };
     this.phase = "resolving";
     this.deps.emit({ type: S2C.ANSWER_RESULT, payload: this.lastReveal });
 
-    const who = aq.view.answererId ? this.deps.nameOf(aq.view.answererId) : side.name;
+    const who = aq.view.answererId && aq.view.answerMode !== "vote" ? this.deps.nameOf(aq.view.answererId) : side.name;
     if (correct) {
       this.pushLog(trophy ? "log.correctTrophy" : "log.correct", { who, n: points, ...(trophy ? { cat: trophy } : {}) }, "good", side.id);
+      if (streakBonus) this.pushLog("log.onFire", { side: side.name, n: streakBonus }, "special", side.id);
     } else {
       this.pushLog(timedOut ? "log.timeout" : "log.wrong", { who }, "bad", side.id);
     }
-
-    void this.deps.persistence.answerRecorded({
-      code: this.deps.roomCode,
-      questionId: aq.stored.id,
-      clientId: aq.view.answererId ? this.deps.clientIdOf(aq.view.answererId) : null,
-      correct,
-      timedOut,
-      responseMs: Date.now() - aq.askedAt,
-    });
     this.changed();
 
     if (trophy && this.settings.winCondition !== "finish" && side.trophies.length >= this.settings.categories.length) {
@@ -438,6 +505,61 @@ export class GameEngine {
       return;
     }
     this.schedule(TIMING.ANSWER_REVEAL_MS, () => this.afterAnswer(correct));
+  }
+
+  /** Sides (other than the one on turn) with someone online who haven't tried yet. */
+  private stealCandidates(): SideState[] {
+    const tried = this.activeQuestion?.view.steal?.attempts ?? {};
+    return this.sides.filter((s) => s.id !== this.currentSide.id && !(s.id in tried) && s.memberIds.some((m) => this.deps.isConnected(m)));
+  }
+
+  private trySteal(playerId: string, askId: string, optionIndex: number) {
+    const aq = this.activeQuestion!;
+    const steal = aq.view.steal!;
+    if (aq.view.question.id !== askId) throw new GameError("err.staleQuestion");
+    if (Date.now() > steal.endsAt + TIMING.ANSWER_GRACE_MS) throw new GameError("err.timeUp");
+    const side = this.sides.find((s) => s.memberIds.includes(playerId));
+    if (!side || side.id === this.currentSide.id) throw new GameError("err.cantSteal");
+    if (side.id in steal.attempts) throw new GameError("err.alreadyTried");
+    if (optionIndex < 0 || optionIndex >= aq.view.question.options.length || optionIndex === steal.wrongIndex) throw new GameError("err.badOption");
+    steal.attempts[side.id] = { playerId, index: optionIndex };
+    if (optionIndex === aq.correctShuffledIndex) return this.finishSteal({ side, playerId });
+    this.pushLog("log.stealMiss", { who: this.deps.nameOf(playerId) }, "bad", side.id);
+    if (!this.stealCandidates().length) return this.finishSteal(null);
+    this.changed();
+  }
+
+  private finishSteal(winner: { side: SideState; playerId: string } | null) {
+    const aq = this.activeQuestion;
+    if (!aq || this.phase !== "steal") return;
+    this.clearTimer();
+    const side = this.currentSide;
+    const pending = this.pendingWrong ?? { chosenIndex: null, timedOut: true };
+    const stolenPoints = Math.round(POINTS[aq.stored.difficulty] / 2);
+    if (winner) {
+      winner.side.score += stolenPoints;
+      this.pushLog("log.stolen", { who: this.deps.nameOf(winner.playerId), side: winner.side.name, n: stolenPoints }, "good", winner.side.id);
+    } else {
+      this.pushLog("log.noSteal", {}, "info");
+    }
+    this.lastReveal = {
+      questionId: aq.view.question.id,
+      sideId: side.id,
+      answererId: aq.view.answererId,
+      chosenIndex: pending.chosenIndex,
+      correctIndex: aq.correctShuffledIndex,
+      correct: false,
+      timedOut: pending.timedOut,
+      points: 0,
+      trophy: null,
+      streakBonus: 0,
+      stolenBy: winner ? { sideId: winner.side.id, playerId: winner.playerId, points: stolenPoints } : null,
+    };
+    this.pendingWrong = null;
+    this.phase = "resolving";
+    this.deps.emit({ type: S2C.ANSWER_RESULT, payload: this.lastReveal });
+    this.changed();
+    this.schedule(TIMING.ANSWER_REVEAL_MS, () => this.afterAnswer(false));
   }
 
   private afterAnswer(correct: boolean) {
