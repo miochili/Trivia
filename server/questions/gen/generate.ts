@@ -18,6 +18,7 @@ import {
   ARTWORKS, ATHLETES, BOOKS, CHARACTERS, FIELDS, FILMS, FRANCHISES, LANDMARKS, MUSICIANS, PEOPLE, SPORTS,
   SUMMER_OLYMPICS, WORLD_CUP_HOSTS, WORLD_CUP_WINNERS,
 } from "./data/culture";
+import { CITIES, NEVER_WC_HOSTS } from "./data/cities";
 
 type L = [string, string, string]; // en, es, de
 const same = (s: string): L => [s, s, s];
@@ -324,7 +325,7 @@ function history() {
         if (Math.abs(o) >= 2 && ![...offs].some((x) => Math.abs(x - o) < 2) && (year + o > 0) === (year > 0)) offs.add(o);
       }
       add("event-year", en, "history", FAMOUS_YEARS.has(year) ? "medium" : "hard",
-        [`In which year was ${en}?`, `¿En qué año fue ${es}?`, `In welchem Jahr war ${de}?`],
+        [`In which year did this happen: ${en}?`, `¿En qué año fue ${es}?`, `In welchem Jahr war ${de}?`],
         yearL(year), [...offs].map((o) => yearL(year + o)));
     }
   }
@@ -522,6 +523,274 @@ function reverse() {
     (k) => [`Which of these people became famous for ${FIELDS[k][0]}?`, `¿Cuál de estas personas destacó en ${FIELDS[k][1]}?`, `Welche dieser Personen wurde durch ${FIELDS[k][2]} berühmt?`], 150);
 }
 
+// ── more kinds of question ──────────────────────────────────────────
+const ROMAN = (n: number) => {
+  const map: [number, string][] = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let out = "";
+  for (const [v, r] of [[20, "XX"] as [number, string], ...map]) while (n >= v) { out += r; n -= v; }
+  return out;
+};
+const enOrd = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
+/** century: positive = AD, negative = BC */
+const centuryL = (c: number): L =>
+  c > 0 ? [`the ${enOrd(c)} century`, `el siglo ${ROMAN(c)}`, `das ${c}. Jahrhundert`] : [`the ${enOrd(-c)} century BC`, `el siglo ${ROMAN(-c)} a. C.`, `das ${-c}. Jahrhundert v. Chr.`];
+const centuryOf = (year: number): number | null => {
+  const y = Math.abs(year);
+  if (y % 100 === 0 || y % 100 === 1) return null; // too close to the boundary to be fair
+  return Math.sign(year) * Math.ceil(y / 100);
+};
+const popL = (m: number): L => {
+  if (m >= 1000) {
+    const b = (m / 1000).toFixed(1).replace(/\.0$/, "");
+    return [`${b} billion`, `${b.replace(".", ",")} mil millones`, `${b.replace(".", ",")} Milliarden`];
+  }
+  return m === 1 ? ["1 million", "1 millón", "1 Million"] : [`${m} million`, `${m} millones`, `${m} Millionen`];
+};
+const roundPop = (m: number) => (m >= 1000 ? Math.round(m / 100) * 100 : m >= 100 ? Math.round(m / 10) * 10 : Math.max(1, Math.round(m)));
+
+const NOBLE = ["He", "Ne", "Ar", "Kr", "Xe", "Rn"];
+const GASES = ["H", "He", "N", "O", "F", "Ne", "Cl", "Ar", "Kr", "Xe", "Rn"];
+const ALKALI = ["Li", "Na", "K", "Rb", "Cs"];
+const HALOGENS = ["F", "Cl", "Br", "I"];
+const METALLOIDS = ["B", "Si", "Ge", "As", "Sb", "Te", "Po"];
+const NONMETALS = ["H", "He", "C", "N", "O", "F", "Ne", "P", "S", "Cl", "Ar", "Se", "Br", "Kr", "I", "Xe", "Rn"];
+
+function more() {
+  const r = rngFor("more");
+  const elL = (e: (typeof ELEMENTS)[number]): L => [e[2], e[3], e[4]];
+  const bySym = (syms: string[]) => ELEMENTS.filter((e) => syms.includes(e[1]));
+
+  // atomic numbers
+  for (const e of ELEMENTS) {
+    const d: Difficulty = e[0] <= 10 ? "medium" : "hard";
+    for (let v = 0; v < 2; v++) {
+      const offs = new Set<number>();
+      while (offs.size < 3) {
+        const o = Math.round((r() * 2 - 1) * Math.max(6, e[0] * 0.3));
+        if (o !== 0 && e[0] + o > 0) offs.add(o);
+      }
+      add("atomic-number", e[1], "science", d,
+        [`What is the atomic number of ${low(e[2])}?`, `¿Cuál es el número atómico de este elemento: ${low(e[3])}?`, `Welche Ordnungszahl hat ${e[4]}?`],
+        same(String(e[0])), [...offs].map((o) => same(String(e[0] + o))));
+      const ws = sample(r, ELEMENTS, 3, (x) => x[0] !== e[0])!;
+      add("atomic-number-rev", e[1], "science", d,
+        [`Which element has the atomic number ${e[0]}?`, `¿Qué elemento tiene el número atómico ${e[0]}?`, `Welches Element hat die Ordnungszahl ${e[0]}?`],
+        elL(e), ws.map(elL));
+    }
+  }
+
+  // element groups
+  const metals = ELEMENTS.filter((e) => !NONMETALS.includes(e[1]) && !METALLOIDS.includes(e[1]));
+  const nonmetals = bySym(NONMETALS);
+  const groupQ = (family: string, n: number, yes: (typeof ELEMENTS)[number][], no: (typeof ELEMENTS)[number][], d: Difficulty, text: L) => {
+    for (let i = 0; i < n; i++) {
+      const right = pick(r, yes);
+      const ws = sample(r, no, 3)!;
+      add(family, `${right[1]}:${ws.map((w) => w[1]).sort().join("+")}`, "science", d, text, elL(right), ws.map(elL));
+    }
+  };
+  groupQ("noble-gas", 200, bySym(NOBLE), ELEMENTS.filter((e) => !NOBLE.includes(e[1])), "medium",
+    ["Which of these elements is a noble gas?", "¿Cuál de estos elementos es un gas noble?", "Welches dieser Elemente ist ein Edelgas?"]);
+  groupQ("gas-room", 250, bySym(GASES), ELEMENTS.filter((e) => !GASES.includes(e[1])), "medium",
+    ["Which of these elements is a gas at room temperature?", "¿Cuál de estos elementos es un gas a temperatura ambiente?", "Welches dieser Elemente ist bei Raumtemperatur gasförmig?"]);
+  groupQ("alkali-metal", 150, bySym(ALKALI), ELEMENTS.filter((e) => !ALKALI.includes(e[1])), "hard",
+    ["Which of these elements is an alkali metal?", "¿Cuál de estos elementos es un metal alcalino?", "Welches dieser Elemente ist ein Alkalimetall?"]);
+  groupQ("halogen", 150, bySym(HALOGENS), ELEMENTS.filter((e) => !HALOGENS.includes(e[1])), "hard",
+    ["Which of these elements is a halogen?", "¿Cuál de estos elementos es un halógeno?", "Welches dieser Elemente ist ein Halogen?"]);
+  groupQ("is-metal", 300, metals, nonmetals, "easy",
+    ["Which of these elements is a metal?", "¿Cuál de estos elementos es un metal?", "Welches dieser Elemente ist ein Metall?"]);
+  groupQ("not-metal", 300, nonmetals, metals, "medium",
+    ["Which of these elements is NOT a metal?", "¿Cuál de estos elementos NO es un metal?", "Welches dieser Elemente ist KEIN Metall?"]);
+  for (let made = 0, tries = 0; made < 500 && tries < 20000; tries++) {
+    const set = sample(r, ELEMENTS, 4)!;
+    const sorted = [...set].sort((a, b) => a[0] - b[0]);
+    if (sorted[1][0] - sorted[0][0] < 4) continue;
+    const before = out.length;
+    add("protons-fewest", sorted.map((e) => e[1]).sort().join("+"), "science", sorted[1][0] >= sorted[0][0] * 2 ? "medium" : "hard",
+      ["Which of these elements has the fewest protons in its nucleus?", "¿Cuál de estos elementos tiene menos protones en su núcleo?", "Welches dieser Elemente hat die wenigsten Protonen im Kern?"],
+      elL(sorted[0]), sorted.slice(1).map(elL));
+    if (out.length > before) made++;
+  }
+
+  // planets by position
+  const ORD: L[] = [["first", "primero", "erste"], ["second", "segundo", "zweite"], ["third", "tercero", "dritte"], ["fourth", "cuarto", "vierte"],
+    ["fifth", "quinto", "fünfte"], ["sixth", "sexto", "sechste"], ["seventh", "séptimo", "siebte"], ["eighth", "octavo", "achte"]];
+  PLANETS.forEach((pl, i) => {
+    for (let v = 0; v < 4; v++) {
+      const ws = sample(r, PLANETS, 3, (x) => x[0] !== pl[0])!;
+      add("planet-order", pl[0], "science", i === 2 ? "easy" : "medium",
+        [`Counting from the Sun, which planet is the ${ORD[i][0]}?`, `Contando desde el Sol, ¿qué planeta es el ${ORD[i][1]}?`, `Von der Sonne aus gezählt: Welcher Planet ist der ${ORD[i][2]}?`],
+        [pl[0], pl[1], pl[2]], ws.map((w) => [w[0], w[1], w[2]] as L));
+    }
+  });
+
+  // discoveries the other way round
+  for (const [, , , person] of DISCOVERIES) {
+    const mine = DISCOVERIES.filter((d) => d[3] === person);
+    for (let v = 0; v < 4; v++) {
+      const right = pick(r, mine);
+      const ws = sample(r, DISCOVERIES, 3, (d) => d[3] !== person)!;
+      add("discovery-rev", person, "science", "medium",
+        [`What is ${person} famous for?`, `¿Por qué se conoce a ${person}?`, `Wofür ist ${person} bekannt?`],
+        capL([right[0], right[1], right[2]]), ws.map((w) => capL([w[0], w[1], w[2]])));
+    }
+  }
+
+  // centuries
+  const exact = EVENTS.filter((e) => !e[4] && centuryOf(e[0]) !== null);
+  for (const [year, en, es, de] of exact) {
+    const c = centuryOf(year)!;
+    for (let v = 0; v < 2; v++) {
+      const offs = new Set<number>();
+      for (let t = 0; offs.size < 3 && t < 50; t++) {
+        const o = Math.round((r() * 2 - 1) * 3);
+        const cc = c + o;
+        if (o !== 0 && Math.sign(cc) === Math.sign(c) && cc !== 0 && cc <= 21) offs.add(o);
+      }
+      if (offs.size < 3) continue;
+      add("event-century", en, "history", c >= 19 ? "medium" : "hard",
+        [`In which century did this happen: ${en}?`, `¿En qué siglo fue ${es}?`, `In welchem Jahrhundert war ${de}?`],
+        capL(centuryL(c)), [...offs].map((o) => capL(centuryL(c + o))));
+    }
+  }
+  const byCentury = new Map<number, (typeof EVENTS)[number][]>();
+  for (const e of exact) byCentury.set(centuryOf(e[0])!, [...(byCentury.get(centuryOf(e[0])!) ?? []), e]);
+  for (const [c, evs] of byCentury) {
+    const others = exact.filter((e) => centuryOf(e[0]) !== c);
+    const cl = centuryL(c);
+    for (let v = 0; v < Math.min(120, evs.length * 12); v++) {
+      const right = pick(r, evs);
+      const ws = sample(r, others, 3)!;
+      add("event-in-century", `${right[1]}:${ws.map((w) => w[1]).sort().join("+")}`, "history", "medium",
+        [`Which of these happened in ${cl[0]}?`, `¿Cuál de estos acontecimientos ocurrió en ${cl[1]}?`, `Welches dieser Ereignisse fand im ${cl[2].replace(/^das /, "")} statt?`],
+        capL([right[1], right[2], right[3]]), ws.map((w) => capL([w[1], w[2], w[3]])));
+    }
+  }
+
+  // countries, the other way round
+  const conts = Object.keys(CONTINENTS) as Continent[];
+  const placed = COUNTRIES.filter((c) => c.continent);
+  for (const k of conts) {
+    const inK = placed.filter((c) => c.continent === k);
+    const outK = placed.filter((c) => c.continent !== k);
+    const [en, es, de] = CONTINENTS[k];
+    for (let v = 0; v < 320; v++) {
+      const right = pick(r, inK);
+      const ws = sample(r, outK, 3)!;
+      add("continent-which", `${right.id}:${ws.map((w) => w.id).sort().join("+")}`, "geography", right.pop >= 30 ? "easy" : "medium",
+        [`Which of these countries is in ${en}?`, `¿Cuál de estos países está en ${es}?`, `Welches dieser Länder liegt in ${de}?`],
+        right.name, ws.map((w) => w.name));
+    }
+  }
+  const curOwners = new Map<string, Country[]>();
+  for (const c of COUNTRIES) if (c.currency && CURRENCIES[c.currency]) curOwners.set(c.currency, [...(curOwners.get(c.currency) ?? []), c]);
+  for (const [cur, owners] of curOwners) {
+    if (owners.length !== 1) continue; // the euro & dollar are shared
+    const c = owners[0];
+    const [en, es, de] = CURRENCIES[cur];
+    for (let v = 0; v < 3; v++) {
+      const ws = sample(r, COUNTRIES, 3, (o) => o.id !== c.id && (o.continent === c.continent || r() < 0.3))!;
+      add("currency-rev", cur, "geography", c.pop >= 60 ? "medium" : "hard",
+        [`Which country uses the ${/^(Pound|Euro|Dollar)/.test(en) ? low(en) : en}?`, `¿Qué país usa como moneda el ${low(es)}?`, `Welches Land hat diese Währung: ${de}?`],
+        c.name, ws.map((w) => w.name));
+    }
+  }
+  for (const c of COUNTRIES.filter((c) => c.lang)) {
+    const [en, es, de] = LANGUAGES[c.lang];
+    for (let v = 0; v < 6; v++) {
+      const ws = sample(r, COUNTRIES, 3, (o) => !!o.lang && o.lang !== c.lang)!;
+      add("language-rev", `${c.id}:${ws.map((w) => w.id).sort().join("+")}`, "geography", c.pop >= 40 ? "easy" : "medium",
+        [`In which of these countries is ${en} the main language?`, `¿En cuál de estos países el idioma principal es el ${low(es)}?`, `In welchem dieser Länder ist ${de} die Hauptsprache?`],
+        c.name, ws.map((w) => w.name));
+    }
+  }
+  const landmarkCountries = [...new Set(LANDMARKS.map((l) => l[3]))];
+  for (const cid of landmarkCountries) {
+    const c = byId.get(cid)!;
+    const mine = LANDMARKS.filter((l) => l[3] === cid);
+    const others = LANDMARKS.filter((l) => l[3] !== cid);
+    for (let v = 0; v < 10; v++) {
+      const right = pick(r, mine);
+      const ws = sample(r, others, 3)!;
+      add("landmark-rev", `${right[0]}:${ws.map((w) => w[0]).sort().join("+")}`, "geography", c.pop >= 60 ? "easy" : "medium",
+        [`Which of these can you visit in ${c.enSubj}?`, `¿Cuál de estos lugares puedes visitar en ${c.esSubj}?`, `Was davon kannst du ${c.deIn} besuchen?`],
+        capL([right[0], right[1], right[2]]), ws.map((w) => capL([w[0], w[1], w[2]])));
+    }
+  }
+
+  // population, roughly
+  for (const c of COUNTRIES.filter((c) => c.pop >= 1.5)) {
+    const right = roundPop(c.pop);
+    for (let v = 0; v < 2; v++) {
+      const vals = new Set<number>();
+      for (let t = 0; vals.size < 3 && t < 40; t++) {
+        const f = pick(r, [0.1, 0.25, 3, 6, 15]);
+        const x = roundPop(c.pop * f);
+        if (x !== right && x >= 1 && x <= 1500 && (x / right >= 2.5 || right / x >= 2.5) && ![...vals].some((y) => y / x < 1.8 && x / y < 1.8)) vals.add(x);
+      }
+      if (vals.size < 3) continue;
+      add("population", c.id, "geography", c.pop >= 100 ? "medium" : "hard",
+        [`About how many people live in ${c.enSubj}?`, `¿Cuántas personas viven aproximadamente en ${c.esSubj}?`, `Wie viele Menschen leben ungefähr ${c.deIn}?`],
+        popL(right), [...vals].map(popL));
+    }
+  }
+
+  // cities
+  const ANGLO = ["usa", "canada", "australia", "new_zealand", "uk", "ireland"];
+  const LATIN = COUNTRIES.filter((c) => (c.continent === "SA" || c.continent === "NA") && !["usa", "canada", "jamaica", "haiti", "guyana"].includes(c.id)).map((c) => c.id);
+  const SPECIAL: Record<string, string[]> = { Lagos: ["portugal"], Bergen: ["netherlands"], "Medellín": ["spain"] };
+  const cityL = (x: (typeof CITIES)[number]): L => [x[0], x[1], x[2]];
+  for (const city of CITIES) {
+    const c = byId.get(city[3])!;
+    const banned = new Set([...ANGLO, ...LATIN, "spain", "portugal", ...(SPECIAL[city[0]] ?? [])]);
+    for (let v = 0; v < 3; v++) {
+      const ws = sample(r, COUNTRIES, 3, (o) => o.id !== c.id && !banned.has(o.id) && (o.continent === c.continent || r() < 0.4));
+      if (!ws) continue;
+      add("city-country", city[0], "geography", c.pop >= 60 || ["Sydney", "New York", "Rio de Janeiro", "Barcelona", "Munich", "Istanbul"].includes(city[0]) ? "easy" : "medium",
+        [`In which country is the city of ${city[0]}?`, `¿En qué país está la ciudad de ${city[1]}?`, `In welchem Land liegt die Stadt ${city[2]}?`],
+        c.name, ws.map((w) => w.name));
+    }
+  }
+  const capitals = COUNTRIES.filter((c) => c.capital).map((c) => ({ ...c, cap: c.capital! }));
+  for (let v = 0; v < 450; v++) {
+    const right = pick(r, capitals);
+    const ws = sample(r, CITIES, 3)!;
+    add("capital-which", `${right.id}:${ws.map((w) => w[0]).sort().join("+")}`, "geography", right.pop >= 30 ? "medium" : "hard",
+      ["Which of these cities is the capital of its country?", "¿Cuál de estas ciudades es la capital de su país?", "Welche dieser Städte ist die Hauptstadt ihres Landes?"],
+      right.cap, ws.map(cityL));
+  }
+  for (let v = 0; v < 450; v++) {
+    const right = pick(r, CITIES);
+    const ws = sample(r, capitals, 3)!;
+    add("capital-not", `${right[0]}:${ws.map((w) => w.id).sort().join("+")}`, "geography", "medium",
+      ["Which of these cities is NOT the capital of its country?", "¿Cuál de estas ciudades NO es la capital de su país?", "Welche dieser Städte ist NICHT die Hauptstadt ihres Landes?"],
+      cityL(right), ws.map((w) => w.cap));
+  }
+
+  // hosts
+  const hostCities = [...new Map(SUMMER_OLYMPICS.map((o) => [o[1], [o[1], o[2], o[3]] as L])).values()];
+  const hostNames = new Set(hostCities.map((h) => h[0]));
+  const WINTER_ONLY = new Set(["Vancouver", "Oslo", "Sapporo", "Turin", "Sochi", "Dakar", "Buenos Aires", "Singapore", "Nanjing"]); // winter or youth hosts
+  const nonHosts: L[] = [...CITIES.map(cityL), ...capitals.map((c) => c.cap)].filter((x) => !hostNames.has(x[0]) && !WINTER_ONLY.has(x[0]));
+  for (const h of hostCities) {
+    for (let v = 0; v < 22; v++) {
+      const ws = sample(r, nonHosts, 3)!;
+      add("olympics-hosted", `${h[0]}:${ws.map((w) => w[0]).sort().join("+")}`, "sports", "medium",
+        ["Which of these cities has hosted the Summer Olympics?", "¿Cuál de estas ciudades ha organizado unos Juegos Olímpicos de verano?", "Welche dieser Städte war schon Gastgeber Olympischer Sommerspiele?"],
+        h, ws);
+    }
+  }
+  const wcHosts = [...new Map(WORLD_CUP_HOSTS.map((o) => [o[1], [o[1], o[2], o[3]] as L])).values()];
+  for (const h of wcHosts) {
+    for (let v = 0; v < 25; v++) {
+      const ws = sample(r, NEVER_WC_HOSTS, 3)!;
+      add("wc-hosted", `${h[0]}:${ws.map((w) => w[0]).sort().join("+")}`, "sports", "medium",
+        ["Which of these countries has hosted the men's FIFA World Cup?", "¿Cuál de estos países ha organizado el Mundial masculino de fútbol?", "Welches dieser Länder war schon Gastgeber der Fußball-WM der Männer?"],
+        h, ws);
+    }
+  }
+}
+
 let cache: StoredQuestion[] | null = null;
 
 /** All generated questions (built once, deterministic). */
@@ -532,6 +801,7 @@ export function generatedQuestions(): StoredQuestion[] {
     history();
     people();
     reverse();
+    more();
     cache = out;
   }
   return cache;

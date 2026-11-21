@@ -420,7 +420,7 @@ export const WORLD_CUP_WINNERS: [number, string, string, string][] = [
   [1978, "Argentina", "Argentina", "Argentinien"], [1982, "Italy", "Italia", "Italien"], [1986, "Argentina", "Argentina", "Argentinien"],
   [1990, "West Germany", "Alemania Federal", "BR Deutschland"], [1994, "Brazil", "Brasil", "Brasilien"], [1998, "France", "Francia", "Frankreich"],
   [2002, "Brazil", "Brasil", "Brasilien"], [2006, "Italy", "Italia", "Italien"], [2010, "Spain", "España", "Spanien"], [2014, "Germany", "Alemania", "Deutschland"],
-  [2018, "France", "Francia", "Frankreich"], [2022, "Argentina", "Argentina", "Argentinien"],
+  [2018, "France", "Francia", "Frankreich"], [2022, "Argentina", "Argentina", "Argentinien"], [2026, "Spain", "España", "Spanien"],
 ];
 
 /** FIFA World Cup hosts: [year, host en, es, de] (no joint hosts) */

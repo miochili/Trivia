@@ -65,10 +65,10 @@ npm run dev          # http://localhost:3000
 
 ## Adding questions or languages
 
-- **Questions:** there are about **22,700 questions** in six categories, all in EN/ES/DE.
+- **Questions:** there are about **30,800 questions** in six categories, all in EN/ES/DE.
   - 85 are hand-written in `server/questions/seedQuestions.ts`. Write each one once per language, with the **correct answer first** and the options **in the same order** in every language.
-  - The rest are built by `server/questions/gen/generate.ts` from fact tables in `server/questions/gen/data/` (countries, elements, animals, planets, historic events, books, films, artworks, athletes and more). Add a row to a table and you get several new questions in all three languages.
-  - Each game rotates between ~50 kinds of question and never asks about the same thing twice. `npm test` checks every question in every language.
+  - The rest are built by `server/questions/gen/generate.ts` from fact tables in `server/questions/gen/data/` (countries, cities, elements, animals, planets, historic events, books, films, artworks, athletes and more). Add a row to a table and you get several new questions in all three languages.
+  - Each game rotates between 67 kinds of question and never asks about the same thing twice. `npm test` checks every question in every language.
 - **Languages:** add the code to `LOCALES` in `src/shared/i18n.ts` and translate a copy of the `es` dictionary. TypeScript flags any missing key.
 
 ## How to play
