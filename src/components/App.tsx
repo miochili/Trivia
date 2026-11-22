@@ -235,6 +235,12 @@ function RoomView({ code, go }: { code: string; go: (c: string | null) => void }
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const error = failure === null ? null : typeof failure === "string" ? t(failure) : errorText(locale, failure);
+  const myPlayerId = useGame((s) => s.playerId);
+  const myLang = state?.players.find((p) => p.id === myPlayerId)?.lang;
+  // Tell the room which language I play in (mixed-language rooms show the question in both).
+  useEffect(() => {
+    if (phase === "in_room" && myLang && myLang !== locale) void request(C2S.SET_LANG, { lang: locale });
+  }, [phase, myLang, locale]);
 
   const adopt = useCallback(
     (res: JoinRes, role: "host" | "guest" | "server") => {

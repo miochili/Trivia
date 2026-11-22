@@ -12,6 +12,7 @@ import { Dice } from "./Dice";
 import { GameBoard } from "./GameBoard";
 import { GameOverModal } from "./GameOverModal";
 import { TriviaModal } from "./TriviaModal";
+import { DifficultyPicker } from "./DifficultyPicker";
 import { ReactionBar, ReactionLayer } from "./Reactions";
 import { TrackStrip } from "./TrackStrip";
 import { useDeviceNiceties } from "@/lib/useDeviceNiceties";
@@ -49,6 +50,7 @@ export function GameScreen() {
         </aside>
       </div>
 
+      <DifficultyPicker room={room} game={game} />
       <TriviaModal room={room} game={game} />
       <GameOverModal room={room} game={game} />
       <ReactionLayer room={room} />
@@ -83,6 +85,7 @@ function BoardCenter({ room, game }: { room: PublicRoomState; game: PublicGameSt
     else if (!active) status = game.autoActionAt ? t("game.offlineSkip", { side: side.name }) : t("game.paused");
     else status = t("game.waitingRoll", { name: active.name });
   } else if (game.phase === "moving") status = t("game.rolling", { side: side.name });
+  else if (game.phase === "choosing") status = t("choose.waiting", { name: active?.name ?? side.name });
   else if (game.phase === "question") status = t("game.answering", { name: active?.name ?? side.name });
   else if (game.phase === "steal") status = t("game.stealing");
   else {

@@ -41,7 +41,7 @@ function setup(opts: {
   }));
   const engine = new GameEngine({
     roomCode: "TEST01",
-    settings: { ...DEFAULT_SETTINGS, categories: ["science", "history", "art"], steals: false, teamAnswer: "captain", ...opts.settings },
+    settings: { ...DEFAULT_SETTINGS, categories: ["science", "history", "art"], steals: false, teamAnswer: "captain", chooseDifficulty: false, ...opts.settings },
     sides,
     pool,
     board: opts.tiles,
@@ -519,5 +519,36 @@ describe("question variety", () => {
     const geo = asked.filter((q) => q.category === "geography");
     for (let i = 1; i < geo.length; i++) expect(geo[i].family).not.toBe(geo[i - 1].family);
     expect(new Set(geo.map((q) => q.family)).size).toBeGreaterThan(8);
+  });
+});
+
+describe("pick the difficulty", () => {
+  it("the side on turn picks easy / medium / hard after landing; points follow the choice", () => {
+    const g = setup({ tiles: board([C, C, C, C, C, C]), rolls: [2], settings: { chooseDifficulty: true } });
+    g.engine.start();
+    g.engine.roll("a");
+    g.settleMove(2);
+    expect(g.st().phase).toBe("choosing");
+    expect(g.st().difficultyChoice).toMatchObject({ category: "science", hq: false });
+    expect(g.st().activeQuestion).toBeNull();
+    expect(() => g.engine.chooseDifficulty("b", "hard")).toThrow(GameError);
+    g.engine.chooseDifficulty("a", "hard");
+    expect(g.st().phase).toBe("question");
+    expect(g.st().difficultyChoice).toBeNull();
+    expect(g.st().activeQuestion!.question.difficulty).toBe("hard");
+    g.engine.submitAnswer("a", g.st().activeQuestion!.question.id, g.rightIndex());
+    expect(g.st().lastReveal).toMatchObject({ correct: true, points: POINTS.hard });
+  });
+
+  it("trophy tiles refuse easy; a difficulty is picked automatically when time runs out", () => {
+    const g = setup({ tiles: board([C, (i) => C(i, "science", true), C, C]), rolls: [2], settings: { chooseDifficulty: true } });
+    g.engine.start();
+    g.engine.roll("a");
+    g.settleMove(2);
+    expect(g.st().difficultyChoice).toMatchObject({ hq: true });
+    expect(() => g.engine.chooseDifficulty("a", "easy")).toThrow(/medium or hard/);
+    vi.advanceTimersByTime(TIMING.CHOOSE_MS + TIMING.ANSWER_GRACE_MS + 1);
+    expect(g.st().phase).toBe("question");
+    expect(["medium", "hard"]).toContain(g.st().activeQuestion!.question.difficulty);
   });
 });

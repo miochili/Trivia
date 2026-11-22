@@ -13,6 +13,8 @@ export const TIMING = {
   SKIP_TURN_MS: 1600,
   /** How long the other sides get to steal a wrongly answered question. */
   STEAL_MS: 10_000,
+  /** Time to pick easy / medium / hard before one is picked for you. */
+  CHOOSE_MS: 12_000,
   /** Grace for network latency on answer submission after the deadline. */
   ANSWER_GRACE_MS: 600,
   /** Active-but-idle player gets auto-rolled after this. */

@@ -67,6 +67,32 @@ export function SettingsPanel() {
           />
         </Field>
 
+        <Field label={t("settings.chooseDiff")} hint={t("settings.chooseDiffHint")}>
+          <Segmented
+            label={t("settings.chooseDiff")}
+            value={s.chooseDifficulty ? "on" : "off"}
+            disabled={!isHost}
+            onChange={(v) => set({ chooseDifficulty: v === "on" })}
+            options={[
+              { value: "on", label: t("settings.on") },
+              { value: "off", label: t("settings.off") },
+            ]}
+          />
+        </Field>
+
+        <Field label={t("settings.othersRead")} hint={t("settings.othersReadHint")}>
+          <Segmented
+            label={t("settings.othersRead")}
+            value={s.othersRead ? "on" : "off"}
+            disabled={!isHost}
+            onChange={(v) => set({ othersRead: v === "on" })}
+            options={[
+              { value: "on", label: t("settings.on") },
+              { value: "off", label: t("settings.off") },
+            ]}
+          />
+        </Field>
+
         <Field label={t("settings.public")} hint={t("settings.publicHint")}>
           <Segmented
             label={t("settings.public")}

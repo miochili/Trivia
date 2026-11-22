@@ -4,6 +4,7 @@ import { S2C, type EngineEvent, type GameOverEvent, type MoveReason } from "../.
 import type {
   ActiveQuestionView,
   AnswerReveal,
+  DifficultyChoiceView,
   CategoryId,
   Difficulty,
   GamePhase,
@@ -106,6 +107,7 @@ export class GameEngine {
   private askSeq = 0;
   private usedQuestionIds = new Set<string>();
   private pendingWrong: { chosenIndex: number | null; timedOut: boolean } | null = null;
+  private choice: { tile: Tile; view: DifficultyChoiceView } | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private disposed = false;
 
@@ -181,6 +183,36 @@ export class GameEngine {
     this.resolveAnswer(optionIndex, false);
   }
 
+  /**
+   * After landing on a category tile (with "pick difficulty" on), any online player of the
+   * side on turn picks easy / medium / hard. Trophy tiles only allow medium or hard.
+   */
+  chooseDifficulty(playerId: string, difficulty: Difficulty) {
+    const c = this.choice;
+    if (this.phase !== "choosing" || !c) throw new GameError("err.noChoiceOpen");
+    if (!this.currentSide.memberIds.includes(playerId)) throw new GameError("err.notYourTurn");
+    if (c.view.hq && difficulty === "easy") throw new GameError("err.trophyNotEasy");
+    this.clearTimer();
+    this.pushLog("log.chose", { who: this.deps.nameOf(playerId), level: difficulty }, "info", this.currentSide.id);
+    this.choice = null;
+    this.askQuestion(c.tile, difficulty);
+  }
+
+  private beginChoice(tile: Tile) {
+    const side = this.currentSide;
+    if (!this.activePlayerId || !this.deps.isConnected(this.activePlayerId)) this.activePlayerId = this.pickActiveMember(side);
+    const view: DifficultyChoiceView = { category: tile.category!, hq: !!tile.hq, endsAt: Date.now() + TIMING.CHOOSE_MS };
+    this.choice = { tile, view };
+    this.phase = "choosing";
+    this.changed();
+    this.schedule(TIMING.CHOOSE_MS + TIMING.ANSWER_GRACE_MS, () => {
+      if (this.phase !== "choosing" || !this.choice) return;
+      const t = this.choice.tile;
+      this.choice = null;
+      this.askQuestion(t, this.pickDifficulty(!!t.hq));
+    });
+  }
+
   private everyoneVoted() {
     const online = this.currentSide.memberIds.filter((m) => this.deps.isConnected(m));
     const votes = this.activeQuestion?.view.suggestions ?? {};
@@ -239,6 +271,14 @@ export class GameEngine {
         this.armRollTimer(); // may switch between "paused" and "skip soon"
         this.changed();
       }
+    } else if (this.phase === "choosing") {
+      if (!this.activePlayerId || !this.deps.isConnected(this.activePlayerId)) {
+        const alt = this.pickActiveMember(side);
+        if (alt !== this.activePlayerId) {
+          this.activePlayerId = alt;
+          this.changed();
+        }
+      }
     } else if (this.phase === "steal") {
       if (!this.stealCandidates().length) this.finishSteal(null);
     } else if (this.phase === "question" && this.activeQuestion) {
@@ -266,6 +306,7 @@ export class GameEngine {
       turnNumber: this.turnNumber,
       lastRoll: this.lastRoll,
       activeQuestion: this.activeQuestion ? structuredClone(this.activeQuestion.view) : null,
+      difficultyChoice: this.choice ? { ...this.choice.view } : null,
       lastReveal: this.lastReveal,
       winnerSideId: this.winnerSideId,
       winReason: this.winReason,
@@ -376,17 +417,16 @@ export class GameEngine {
     }
     const tile = this.board[side.position];
     if (tile.kind === "finish" && !this.loopMode) return this.finishGame(side, "finish");
-    if (tile.kind === "category" && tile.category) return this.askQuestion(tile);
+    if (tile.kind === "category" && tile.category) return this.settings.chooseDifficulty ? this.beginChoice(tile) : this.askQuestion(tile, this.pickDifficulty(!!tile.hq));
     if (tile.kind === "special" && tile.special) return this.applySpecial(tile);
     this.endTurn();
   }
 
   // ───────────────────────────── trivia ─────────────────────────────
 
-  private askQuestion(tile: Tile) {
+  private askQuestion(tile: Tile, difficulty: Difficulty) {
     const side = this.currentSide;
     const category = tile.category!;
-    const difficulty = this.pickDifficulty(!!tile.hq);
     const stored = this.pickQuestion(category, difficulty);
     if (!stored) {
       this.pushLog("log.noQuestions", { cat: category }, "info");
@@ -643,6 +683,9 @@ export class GameEngine {
       }
       famNames = [...byFam.keys()];
     }
+    // Prefer kinds of question that still have one at the wanted difficulty (it decides the points).
+    const withLevel = famNames.filter((f) => byFam.get(f)!.some((q) => q.difficulty === difficulty && fresh(q)));
+    if (withLevel.length) famNames = withLevel;
     const notRecent = famNames.filter((f) => !this.recentFamilies.includes(f));
     const fam = (notRecent.length ? notRecent : famNames)[Math.floor(this.rng() * (notRecent.length || famNames.length))];
     const qs = byFam.get(fam)!.filter(fresh);

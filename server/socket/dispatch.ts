@@ -103,6 +103,10 @@ export function createDispatcher(manager: RoomManager, opts: DispatchOptions = {
       const { room, playerId } = ctx(conn);
       room.setAvatar(playerId, avatar);
     }),
+    [C2S.SET_LANG]: h(schemas.setLang, (conn, { lang }) => {
+      const { room, playerId } = ctx(conn);
+      room.setLang(playerId, lang);
+    }),
     [C2S.REACT]: h(schemas.react, (conn, { emoji }) => {
       const { room, playerId } = ctx(conn);
       room.react(playerId, emoji);
@@ -123,6 +127,10 @@ export function createDispatcher(manager: RoomManager, opts: DispatchOptions = {
     [C2S.SUBMIT_ANSWER]: h(schemas.submitAnswer, (conn, { questionId, optionIndex }) => {
       const { engine, playerId } = playing(conn);
       engine.submitAnswer(playerId, questionId, optionIndex);
+    }),
+    [C2S.CHOOSE_DIFFICULTY]: h(schemas.chooseDifficulty, (conn, { difficulty }) => {
+      const { engine, playerId } = playing(conn);
+      engine.chooseDifficulty(playerId, difficulty);
     }),
     [C2S.SUGGEST_ANSWER]: h(schemas.submitAnswer, (conn, { questionId, optionIndex }) => {
       const { engine, playerId } = playing(conn);

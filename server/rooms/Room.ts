@@ -24,6 +24,7 @@ export interface PlayerRecord {
   teamId: string | null;
   color: string;
   avatar: string;
+  lang: "en" | "es" | "de";
   joinedAt: number;
   disconnectedAt: number | null;
 }
@@ -101,6 +102,7 @@ export class Room {
       teamId: null,
       color: PLAYER_COLORS.find((c) => !used.has(c)) ?? PLAYER_COLORS[this.players.size % PLAYER_COLORS.length],
       avatar: this.freeAvatar(avatar),
+      lang: "en",
       joinedAt: Date.now(),
       disconnectedAt: null,
     };
@@ -293,6 +295,14 @@ export class Room {
     this.queueBroadcast();
   }
 
+  /** The player's UI language (any time — also mid-game). */
+  setLang(byId: string, lang: "en" | "es" | "de") {
+    const p = this.mustGet(byId);
+    if (p.lang === lang) return;
+    p.lang = lang;
+    this.queueBroadcast();
+  }
+
   private lastReaction = new Map<string, number>();
   private reactionSeq = 0;
 
@@ -414,6 +424,7 @@ export class Room {
         ready: p.ready || p.id === this.hostId,
         color: p.color,
         avatar: p.avatar,
+        lang: p.lang,
       })),
       teams: this.teams.map((t) => ({
         ...t,

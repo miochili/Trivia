@@ -37,7 +37,7 @@ describe("i18n", () => {
     const pool = await new InMemoryQuestionBank().loadPool(["science"]);
     const engine = new GameEngine({
       roomCode: "T",
-      settings: { ...DEFAULT_SETTINGS, categories: ["science"] },
+      settings: { ...DEFAULT_SETTINGS, categories: ["science"], chooseDifficulty: false },
       sides: [
         { id: "A", name: "A", color: "#f00", emblem: "🦊", memberIds: ["a"] },
         { id: "B", name: "B", color: "#00f", emblem: "🐻", memberIds: ["b"] },

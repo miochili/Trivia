@@ -102,7 +102,14 @@ describe("socket protocol end-to-end", () => {
     expect(roll.value).toBeLessThanOrEqual(6);
 
     // wait for landing; tile could be a category (question) or a special tile
-    await until(() => ["question", "resolving", "awaiting_roll"].includes(hostState().game!.phase) && hostState().game!.lastRoll !== null);
+    await until(() => ["choosing", "question", "resolving", "awaiting_roll"].includes(hostState().game!.phase) && hostState().game!.lastRoll !== null);
+    if (hostState().game!.phase === "choosing") {
+      // pick-the-difficulty step (default on): only the side on turn may choose
+      expect(await call(idle, C2S.CHOOSE_DIFFICULTY, { difficulty: "medium" })).toMatchObject({ ok: false });
+      const tile = hostState().game!.difficultyChoice!;
+      expect(await call(active, C2S.CHOOSE_DIFFICULTY, { difficulty: tile.hq ? "hard" : "medium" })).toMatchObject({ ok: true });
+      await until(() => hostState().game!.phase === "question");
+    }
     const st = hostState().game!;
     if (st.phase === "question") {
       const q = st.activeQuestion!;

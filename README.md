@@ -74,6 +74,9 @@ npm run dev          # http://localhost:3000
 ## How to play
 
 - **Your turn:** roll the die, hop around the ring, and answer a question in the tile's category before the hourglass runs out.
+- **Pick the difficulty** (host setting, on by default): after you land on a category tile you see the category and choose easy, medium or hard. Trophy tiles only allow medium or hard. If nobody picks within 12 seconds, one is picked for you.
+- **Others read** (host setting, off by default): the answering player or team only sees the four answers; the other players see the question and read it out loud.
+- **Mixed languages:** each player picks their own language. The question card also shows the question in the other languages used in the room (e.g. a Spanish reader sees the German version to read to a German teammate).
 - **Right answer:** easy 100, medium 200, hard 300 points. On a 🏆 tile you also win that category's trophy (+200 points).
 - **Wrong answer or out of time:** you move back one tile.
 - **Special tiles:** 🎲 Roll Again · 🔀 Swap places with the pawn ahead · ⛓️ Lose a Turn · 💰 Double Points on your next question.

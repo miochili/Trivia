@@ -27,6 +27,7 @@ import { BUILDINGS, EXTRA_BOOKS, WORKS } from "./data/art2";
 import { ANIMATED, GAMES, SONGS, TV_SHOWS } from "./data/pop2";
 import { CLUBS, EXTRA_ATHLETES, EXTRA_SPORTS, TEAM_SIZES, TERMS, TOURNAMENTS } from "./data/sport2";
 import { ANIMAL_HOMES, ANIMAL_LEGS, ANIMAL_MASS, BROADLEAF, CARNIVORES, CONIFERS, HERBIVORES } from "./data/nature";
+import { PACKS } from "./packs";
 
 // extra rows feed the existing question families too
 EVENTS.push(...EXTRA_EVENTS);
@@ -35,7 +36,7 @@ BOOKS.push(...EXTRA_BOOKS);
 ATHLETES.push(...EXTRA_ATHLETES);
 Object.assign(SPORTS, EXTRA_SPORTS);
 
-type L = [string, string, string]; // en, es, de
+export type L = [string, string, string]; // en, es, de
 const same = (s: string): L => [s, s, s];
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const low = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
@@ -102,7 +103,7 @@ function add(family: string, stem: string, category: CategoryId, difficulty: Dif
 }
 
 // ── countries ───────────────────────────────────────────────────────
-interface Country {
+export interface Country {
   id: string;
   name: L;
   capital: L | null;
@@ -461,6 +462,7 @@ function people() {
     for (const [year, en, es, de] of list) {
       for (let v = 0; v < 3; v++) {
         const ws = sample(r, nations, 3, (n) => n[0] !== en && !(germanish(n[0]) && germanish(en)))!;
+        if (ws.filter((w) => germanish(w[0])).length > 1) continue; // never both "Germany" and "West Germany"
         add(family, String(year), "sports", year >= 1990 ? "medium" : "hard", q(year), [en, es, de], ws);
       }
     }
@@ -1077,6 +1079,67 @@ function extra() {
     ["Which of these trees is a broadleaf tree?", "¿Cuál de estos árboles es de hoja ancha?", "Welcher dieser Bäume ist ein Laubbaum?"]);
 }
 
+/** "Which is the biggest/smallest of these 4?" from rows [en, es, de, value]; only asked when the winner is clear. */
+function extremeOf(o: { family: string; category: CategoryId; n: number; rows: [string, string, string, number][]; max: boolean; minRatio?: number; minGap?: number; text: L; diff?: Difficulty }) {
+  const r = rngFor(o.family);
+  for (let made = 0, tries = 0; made < o.n && tries < o.n * 40; tries++) {
+    const set = sample(r, o.rows, 4);
+    if (!set) return;
+    const sorted = [...set].sort((a, b) => (o.max ? b[3] - a[3] : a[3] - b[3]));
+    const [best, second] = sorted;
+    if (best[3] === second[3]) continue;
+    if (o.minGap !== undefined && Math.abs(best[3] - second[3]) < o.minGap) continue;
+    const ratio = o.max ? best[3] / second[3] : second[3] / best[3];
+    if (o.minRatio !== undefined && !(ratio >= o.minRatio)) continue;
+    const before = out.length;
+    add(o.family, sorted.map((x) => x[0]).sort().join("+"), o.category, o.diff ?? (ratio >= 5 ? "easy" : ratio >= 2 ? "medium" : "hard"),
+      o.text, [best[0], best[1], best[2]], sorted.slice(1).map((x) => [x[0], x[1], x[2]] as L));
+    if (out.length > before) made++;
+  }
+}
+
+/**
+ * The toolkit a question pack (./packs/*.ts) gets. A pack is `export default function (api: PackApi) { … }`.
+ * Every question: correct answer first, 4 options, all different in EN, ES and DE.
+ */
+export interface PackApi {
+  /** Low-level: add one question. stem = what it is about (never asked twice per game). */
+  add: typeof add;
+  /** One question per row (× variants); wrong answers sampled from `pool`. */
+  lookup: typeof lookup;
+  /** "Which of these belongs to <group>?" — right row from the group, 3 rows from other groups. */
+  which: typeof which;
+  /** "Which of these is a <yes>?" — 1 from `yes`, 3 from `no`, n questions. */
+  groupYesNo: typeof groupYesNo;
+  /** "Which of these 4 has the most/least <value>?" */
+  extremeOf: typeof extremeOf;
+  rngFor: typeof rngFor;
+  pick: typeof pick;
+  sample: typeof sample;
+  same: typeof same;
+  cap: typeof cap;
+  low: typeof low;
+  capL: typeof capL;
+  /** All countries with grammar helpers (enSubj "the United States", esSubj, esDe "de Francia", deSubj, deIn "in der Türkei", deVon). */
+  COUNTRIES: Country[];
+  byId: Map<string, Country>;
+  nameOf: (c: Country) => L;
+  /** German "aus Spanien" / "aus der Türkei" … */
+  deAus: (c: Country) => string;
+  /** German "zu Spanien" / "zur Türkei" … */
+  deZu: (c: Country) => string;
+  /** German accusative "den Irak" … */
+  deAcc: (c: Country) => string;
+  /** Spanish "a Francia" / "al Reino Unido" */
+  esA: (c: Country) => string;
+  CONTINENTS: typeof CONTINENTS;
+  contKeys: Continent[];
+  /** Year as an option label (negative = BC). */
+  yearL: (y: number) => L;
+  /** Century label, e.g. "the 19th century" / "el siglo XIX" / "das 19. Jahrhundert" (negative = BC). */
+  centuryL: (c: number) => L;
+}
+
 let cache: StoredQuestion[] | null = null;
 
 /** All generated questions (built once, deterministic). */
@@ -1089,6 +1152,11 @@ export function generatedQuestions(): StoredQuestion[] {
     reverse();
     more();
     extra();
+    const api: PackApi = {
+      add, lookup, which, groupYesNo, extremeOf, rngFor, pick, sample, same, cap, low, capL,
+      COUNTRIES, byId, nameOf, deAus, deZu, deAcc, esA, CONTINENTS, contKeys, yearL, centuryL,
+    };
+    for (const pack of PACKS) pack(api);
     cache = out;
   }
   return cache;

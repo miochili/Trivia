@@ -82,6 +82,16 @@ export function TriviaModal({ room, game }: { room: PublicRoomState; game: Publi
   const player = (id: string) => room.players.find((p) => p.id === id);
   const picksFor = (i: number) => Object.entries(aq?.suggestions ?? {}).filter(([, idx]) => idx === i).map(([pid]) => player(pid)).filter(Boolean);
   const stealPoints = aq ? Math.round(POINTS[aq.question.difficulty] / 2) : 0;
+  // "Others read": the answering side only sees the options; everyone else reads the question aloud.
+  const readers = side ? room.players.filter((p) => p.connected && !side.memberIds.includes(p.id)) : [];
+  const listeners = side ? room.players.filter((p) => p.connected && side.memberIds.includes(p.id) && (mode === "vote" || p.id === aq?.answererId || mode === "captain")) : [];
+  const readAloud = room.settings.othersRead && game.phase === "question" && !reveal && readers.length > 0;
+  const iListen = readAloud && myTurnTeam;
+  const iRead = readAloud && !myTurnTeam;
+  const names = (ps: typeof readers) => ps.slice(0, 3).map((p) => p.name).join(", ") + (ps.length > 3 ? " …" : "");
+  // Mixed-language rooms: also show the question in the other players' languages (answerers' first when reading aloud).
+  const langOrder = [...(iRead ? listeners : []), ...room.players.filter((p) => p.connected)].map((p) => p.lang);
+  const otherLangs = [...new Set(langOrder)].filter((l) => l && l !== locale);
   const notVoted = side ? room.players.filter((p) => side.memberIds.includes(p.id) && p.connected && !(p.id in (aq?.suggestions ?? {}))) : [];
 
   let status: React.ReactNode = null;
@@ -185,9 +195,24 @@ export function TriviaModal({ room, game }: { room: PublicRoomState; game: Publi
                     ? t("trivia.answeringFor", { name: answerer?.name ?? side.name, side: side.name })
                     : t("trivia.answering", { name: answerer?.name ?? side?.name ?? "?" })}
             </p>
-            <h2 id="q-text" className="mt-1 text-[1.55rem] font-bold leading-snug text-ink sm:text-[1.75rem]">
-              {lq.text}
-            </h2>
+            {iListen ? (
+              <div id="q-text" className="mt-2 rounded-lg border-2 border-dashed border-ink/35 bg-vellum/60 px-3 py-5 text-center text-xl font-bold leading-snug">
+                {t(readers.length === 1 ? "q.listenOne" : "q.listen", { names: names(readers) })}
+              </div>
+            ) : (
+              <>
+                {iRead && <p className="mt-2 rounded-md bg-brass-light/40 px-2 py-1 font-bold text-ink">{t("q.readAloud", { names: names(listeners) })}</p>}
+                <h2 id="q-text" className="mt-1 text-[1.55rem] font-bold leading-snug text-ink sm:text-[1.75rem]">
+                  {lq.text}
+                </h2>
+                {otherLangs.map((l) => (
+                  <p key={l} lang={l} className="mt-1.5 flex items-baseline gap-2 text-lg italic leading-snug text-ink-soft">
+                    <span className="shrink-0 rounded bg-ink/10 px-1.5 text-sm font-bold not-italic text-ink">{l.toUpperCase()}</span>
+                    <span>{localizeQuestion(aq.question, l).text}</span>
+                  </p>
+                ))}
+              </>
+            )}
 
             <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
               {lq.options.map((opt, i) => {

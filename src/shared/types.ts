@@ -39,6 +39,10 @@ export interface GameSettings {
   teamAnswer: "vote" | "captain";
   /** After a wrong answer, the other sides may steal it for half the points. */
   steals: boolean;
+  /** After landing on a category tile the player picks easy / medium / hard. */
+  chooseDifficulty: boolean;
+  /** The answering side only sees the options — someone else reads the question out loud. */
+  othersRead: boolean;
   /** Listed under "Open games" on the start page while waiting for players. */
   isPublic: boolean;
   maxPlayers: number;
@@ -53,6 +57,8 @@ export const DEFAULT_SETTINGS: GameSettings = {
   correctAnswerRule: "stay",
   teamAnswer: "vote",
   steals: true,
+  chooseDifficulty: true,
+  othersRead: false,
   isPublic: true,
   maxPlayers: 12,
 };
@@ -67,6 +73,8 @@ export interface PublicPlayer {
   color: string;
   /** The little character on this player's pawn (emoji). */
   avatar: string;
+  /** The language this player plays in (shown to others for mixed-language rooms). */
+  lang: "en" | "es" | "de";
 }
 
 export interface PublicTeam {
@@ -100,6 +108,7 @@ export interface PublicSide {
 export type GamePhase =
   | "awaiting_roll" // active player may roll
   | "moving" // dice + pawn animation running
+  | "choosing" // landed on a category tile, picking easy / medium / hard
   | "question" // trivia card open, timer running
   | "steal" // the answer was wrong; other sides race to steal it
   | "resolving" // showing answer result / special tile effect
@@ -137,6 +146,14 @@ export interface ActiveQuestionView {
   suggestions: Record<string, number>;
   /** Open steal window after a wrong answer. */
   steal: StealView | null;
+}
+
+export interface DifficultyChoiceView {
+  category: CategoryId;
+  /** Trophy tile: only medium or hard. */
+  hq: boolean;
+  /** Server epoch ms when a difficulty is picked automatically. */
+  endsAt: number;
 }
 
 export interface StealView {
@@ -183,6 +200,8 @@ export interface PublicGameState {
   turnNumber: number;
   lastRoll: number | null;
   activeQuestion: ActiveQuestionView | null;
+  /** Open while phase === "choosing". */
+  difficultyChoice: DifficultyChoiceView | null;
   lastReveal: AnswerReveal | null;
   /** Highest final score (the winner). */
   winnerSideId: string | null;

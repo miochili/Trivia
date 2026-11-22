@@ -42,6 +42,8 @@ export const C2S = {
   ROLL_DICE: "ROLL_DICE",
   SUBMIT_ANSWER: "SUBMIT_ANSWER",
   SUGGEST_ANSWER: "SUGGEST_ANSWER",
+  CHOOSE_DIFFICULTY: "CHOOSE_DIFFICULTY",
+  SET_LANG: "SET_LANG",
   RETURN_TO_LOBBY: "RETURN_TO_LOBBY",
 } as const;
 
@@ -159,6 +161,8 @@ export interface ClientToServerEvents {
   [C2S.ROLL_DICE]: (p: Record<string, never>, ack: (r: Ack<{ value: number }>) => void) => void;
   [C2S.SUBMIT_ANSWER]: (p: SubmitAnswerPayload, ack: (r: Ack) => void) => void;
   [C2S.SUGGEST_ANSWER]: (p: SubmitAnswerPayload, ack: (r: Ack) => void) => void;
+  [C2S.CHOOSE_DIFFICULTY]: (p: { difficulty: "easy" | "medium" | "hard" }, ack: (r: Ack) => void) => void;
+  [C2S.SET_LANG]: (p: { lang: "en" | "es" | "de" }, ack: (r: Ack) => void) => void;
   [C2S.RETURN_TO_LOBBY]: (p: Record<string, never>, ack: (r: Ack) => void) => void;
 }
 
