@@ -5,24 +5,12 @@ export const UNITS: [string, string, string, string, string, string][] = [
   ["power", "potencia", "Leistung", "Watt", "Vatio", "Watt"],
   ["electric current", "corriente eléctrica", "elektrische Stromstärke", "Ampere", "Amperio", "Ampere"],
   ["voltage", "tensión eléctrica", "elektrische Spannung", "Volt", "Voltio", "Volt"],
-  ["electrical resistance", "resistencia eléctrica", "elektrischer Widerstand", "Ohm", "Ohmio", "Ohm"],
   ["frequency", "frecuencia", "Frequenz", "Hertz", "Hercio", "Hertz"],
   ["pressure", "presión", "Druck", "Pascal", "Pascal", "Pascal"],
   ["thermodynamic temperature", "temperatura termodinámica", "thermodynamische Temperatur", "Kelvin", "Kelvin", "Kelvin"],
   ["mass", "masa", "Masse", "Kilogram", "Kilogramo", "Kilogramm"],
   ["length", "longitud", "Länge", "Metre", "Metro", "Meter"],
   ["time", "tiempo", "Zeit", "Second", "Segundo", "Sekunde"],
-  ["amount of substance", "cantidad de sustancia", "Stoffmenge", "Mole", "Mol", "Mol"],
-  ["luminous intensity", "intensidad luminosa", "Lichtstärke", "Candela", "Candela", "Candela"],
-  ["electric charge", "carga eléctrica", "elektrische Ladung", "Coulomb", "Culombio", "Coulomb"],
-  ["capacitance", "capacidad eléctrica", "elektrische Kapazität", "Farad", "Faradio", "Farad"],
-  ["magnetic flux density", "densidad de flujo magnético", "magnetische Flussdichte", "Tesla", "Tesla", "Tesla"],
-  ["magnetic flux", "flujo magnético", "magnetischer Fluss", "Weber", "Weber", "Weber"],
-  ["inductance", "inductancia", "Induktivität", "Henry", "Henrio", "Henry"],
-  ["electrical conductance", "conductancia eléctrica", "elektrischer Leitwert", "Siemens", "Siemens", "Siemens"],
-  ["radioactivity", "actividad radiactiva", "Radioaktivität (Aktivität)", "Becquerel", "Becquerelio", "Becquerel"],
-  ["illuminance", "iluminancia", "Beleuchtungsstärke", "Lux", "Lux", "Lux"],
-  ["absorbed radiation dose", "dosis de radiación absorbida", "Energiedosis", "Gray", "Gray", "Gray"],
 ];
 
 export const ORGANS: Record<string, [string, string, string]> = {
@@ -55,7 +43,6 @@ export const ORGAN_JOBS: [string, string, string, string, string[]?][] = [
 /** More discoveries: [thing en, es, de (accusative-safe), person] */
 export const EXTRA_DISCOVERIES: [string, string, string, string][] = [
   ["The improved steam engine with a separate condenser", "La máquina de vapor mejorada con condensador separado", "Die verbesserte Dampfmaschine mit separatem Kondensator", "James Watt"],
-  ["The AC induction motor", "El motor de inducción de corriente alterna", "Die Erfindung des Drehstrom-Induktionsmotors", "Nikola Tesla"],
   ["The lightning rod", "El pararrayos", "Die Erfindung des Blitzableiters", "Benjamin Franklin"],
   ["The pendulum clock", "El reloj de péndulo", "Die Pendeluhr", "Christiaan Huygens"],
   ["The discovery of the atomic nucleus", "El descubrimiento del núcleo atómico", "Die Entdeckung des Atomkerns", "Ernest Rutherford"],
@@ -74,15 +61,8 @@ export const EXTRA_DISCOVERIES: [string, string, string, string][] = [
   ["The first published computer algorithm", "El primer algoritmo informático publicado", "Die erste veröffentlichte Computerprogramm-Idee", "Ada Lovelace"],
   ["Discovering four large moons of Jupiter", "El descubrimiento de cuatro grandes lunas de Júpiter", "Die Entdeckung von vier großen Jupitermonden", "Galileo Galilei"],
   ["Describing how blood circulates in the body", "La descripción de la circulación sanguínea", "Die Beschreibung des Blutkreislaufs", "William Harvey"],
-  ["Showing that electric current creates a magnetic field", "La demostración de que la corriente eléctrica crea un campo magnético", "Die Entdeckung, dass elektrischer Strom ein Magnetfeld erzeugt", "Hans Christian Ørsted"],
   ["The first electric battery (the voltaic pile)", "La primera pila eléctrica (pila voltaica)", "Die erste elektrische Batterie (Voltasche Säule)", "Alessandro Volta"],
-  ["The law relating voltage, current and resistance", "La ley que relaciona tensión, corriente y resistencia", "Die Gesetzmäßigkeit zwischen Spannung, Strom und Widerstand", "Georg Ohm"],
-  ["Proving that electromagnetic waves exist", "La demostración de la existencia de las ondas electromagnéticas", "Die Bestätigung, dass elektromagnetische Wellen existieren", "Heinrich Hertz"],
   ["Long-distance radio transmission", "La transmisión de radio a larga distancia", "Die Funkübertragung über weite Strecken", "Guglielmo Marconi"],
-  ["The equations that unite electricity and magnetism", "Las ecuaciones que unen electricidad y magnetismo", "Die Gleichungen, die Elektrizität und Magnetismus vereinen", "James Clerk Maxwell"],
   ["The prediction that black holes give off radiation", "La predicción de que los agujeros negros emiten radiación", "Die Vorhersage, dass Schwarze Löcher Strahlung abgeben", "Stephen Hawking"],
   ["Photo 51, the key X-ray image of DNA", "La Foto 51, la imagen de rayos X clave del ADN", "Das Foto 51, die entscheidende Röntgenaufnahme der DNA", "Rosalind Franklin"],
-  ["The Z3, an early programmable computer", "La Z3, una de las primeras computadoras programables", "Die Z3 (früher programmierbarer Computer)", "Konrad Zuse"],
-  ["The Linux kernel", "El núcleo Linux", "Die Entwicklung des Linux-Kernels", "Linus Torvalds"],
-  ["The first compiler for a programming language", "El primer compilador para un lenguaje de programación", "Die Entwicklung des ersten Compilers", "Grace Hopper"],
 ];

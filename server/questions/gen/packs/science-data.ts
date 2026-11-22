@@ -67,10 +67,6 @@ export const INSTRUMENTS: { id: string; name: L; what: L; verb: L; clash?: strin
   { id: "anemometer", name: ["anemometer", "anemómetro", "Anemometer"], what: ["Wind speed", "Velocidad del viento", "Windgeschwindigkeit"], verb: ["measures wind speed", "mide la velocidad del viento", "misst die Windgeschwindigkeit"], clash: ["speedometer"], d: "medium" },
   { id: "seismograph", name: ["seismograph", "sismógrafo", "Seismograf"], what: ["Earthquakes", "Terremotos", "Erdbeben"], verb: ["records earthquakes", "registra los terremotos", "zeichnet Erdbeben auf"], d: "medium" },
   { id: "hygrometer", name: ["hygrometer", "higrómetro", "Hygrometer"], what: ["Humidity", "Humedad del aire", "Luftfeuchtigkeit"], verb: ["measures humidity", "mide la humedad del aire", "misst die Luftfeuchtigkeit"], d: "medium" },
-  { id: "ammeter", name: ["ammeter", "amperímetro", "Amperemeter"], what: ["Electric current", "Corriente eléctrica", "Stromstärke"], verb: ["measures electric current", "mide la corriente eléctrica", "misst die Stromstärke"], d: "medium" },
-  { id: "voltmeter", name: ["voltmeter", "voltímetro", "Voltmeter"], what: ["Voltage", "Tensión eléctrica", "Spannung"], verb: ["measures voltage", "mide la tensión eléctrica", "misst die elektrische Spannung"], d: "easy" },
-  { id: "ohmmeter", name: ["ohmmeter", "óhmetro", "Ohmmeter"], what: ["Electrical resistance", "Resistencia eléctrica", "Elektrischer Widerstand"], verb: ["measures electrical resistance", "mide la resistencia eléctrica", "misst den elektrischen Widerstand"], d: "medium" },
-  { id: "wattmeter", name: ["wattmeter", "vatímetro", "Wattmeter"], what: ["Electrical power", "Potencia eléctrica", "Elektrische Leistung"], verb: ["measures electrical power", "mide la potencia eléctrica", "misst die elektrische Leistung"], d: "medium" },
   { id: "odometer", name: ["odometer", "odómetro", "Kilometerzähler"], what: ["Distance travelled", "Distancia recorrida", "Zurückgelegte Strecke"], verb: ["measures the distance travelled", "mide la distancia recorrida", "misst die zurückgelegte Strecke"], d: "medium" },
   { id: "speedometer", name: ["speedometer", "velocímetro", "Tachometer"], what: ["Speed", "Velocidad", "Geschwindigkeit"], verb: ["shows a vehicle's speed", "indica la velocidad de un vehículo", "zeigt die Geschwindigkeit eines Fahrzeugs an"], clash: ["anemometer"], d: "easy" },
   { id: "altimeter", name: ["altimeter", "altímetro", "Altimeter"], what: ["Altitude", "Altitud", "Flughöhe"], verb: ["measures altitude", "mide la altitud", "misst die Flughöhe"], clash: ["barometer"], d: "medium" },
@@ -114,7 +110,6 @@ export const BRANCHES: { name: L; what: L; ph: L; g?: string; d: D }[] = [
 // ── units & electronics ─────────────────────────────────────────────
 /** SI prefixes: [name en, es, de], symbol, power of ten, difficulty */
 export const PREFIXES: { name: L; sym: string; exp: number; d: D }[] = [
-  { name: ["peta", "peta", "Peta"], sym: "P", exp: 15, d: "hard" },
   { name: ["tera", "tera", "Tera"], sym: "T", exp: 12, d: "medium" },
   { name: ["giga", "giga", "Giga"], sym: "G", exp: 9, d: "medium" },
   { name: ["mega", "mega", "Mega"], sym: "M", exp: 6, d: "easy" },
@@ -127,98 +122,16 @@ export const PREFIXES: { name: L; sym: string; exp: number; d: D }[] = [
   { name: ["micro", "micro", "Mikro"], sym: "µ", exp: -6, d: "medium" },
   { name: ["nano", "nano", "Nano"], sym: "n", exp: -9, d: "medium" },
   { name: ["pico", "pico", "Piko"], sym: "p", exp: -12, d: "hard" },
-  { name: ["femto", "femto", "Femto"], sym: "f", exp: -15, d: "hard" },
-];
-
-/** Electronic components. fn = "Which component <fn>?", job = short label for "What does <a> do?", a = "<a component>" */
-export const COMPONENTS: { id: string; name: L; a: L; fn: L; job: L; clash?: string[]; d: D }[] = [
-  { id: "resistor", name: ["Resistor", "Resistencia", "Widerstand"], a: ["a resistor", "una resistencia", "ein Widerstand"],
-    fn: ["limits the current with a fixed value in ohms", "limita la corriente con un valor fijo en ohmios", "begrenzt den Strom mit einem festen Wert in Ohm"],
-    job: ["Limits the current", "Limita la corriente", "Begrenzt den Strom"], clash: ["pot", "thermistor", "ldr", "fuse"], d: "medium" },
-  { id: "pot", name: ["Potentiometer", "Potenciómetro", "Potentiometer"], a: ["a potentiometer", "un potenciómetro", "ein Potentiometer"],
-    fn: ["has a resistance you can adjust by turning a knob", "permite ajustar su valor en ohmios girando un mando", "hat einen Widerstandswert, den man per Drehknopf einstellt"],
-    job: ["Provides an adjustable resistance", "Ofrece un valor óhmico ajustable", "Bietet einen einstellbaren Widerstand"], clash: ["resistor", "thermistor", "ldr"], d: "hard" },
-  { id: "thermistor", name: ["Thermistor", "Termistor", "Thermistor"], a: ["a thermistor", "un termistor", "ein Thermistor"],
-    fn: ["changes its resistance strongly with temperature", "cambia mucho su valor en ohmios con la temperatura", "ändert seinen Widerstandswert stark mit der Temperatur"],
-    job: ["Senses temperature", "Detecta la temperatura", "Erfasst die Temperatur"], clash: ["resistor", "pot", "ldr"], d: "hard" },
-  { id: "ldr", name: ["LDR (photoresistor)", "Fotorresistencia (LDR)", "Fotowiderstand (LDR)"], a: ["an LDR (photoresistor)", "una fotorresistencia (LDR)", "ein Fotowiderstand (LDR)"],
-    fn: ["changes its resistance with the amount of light falling on it", "cambia su valor en ohmios según la luz que recibe", "ändert seinen Widerstandswert je nach Lichteinfall"],
-    job: ["Senses light", "Detecta la luz", "Erfasst Licht"], clash: ["resistor", "pot", "thermistor", "solar"], d: "hard" },
-  { id: "capacitor", name: ["Capacitor", "Condensador", "Kondensator"], a: ["a capacitor", "un condensador", "ein Kondensator"],
-    fn: ["stores energy in an electric field between two plates", "almacena energía en un campo eléctrico entre dos placas", "speichert Energie im elektrischen Feld zwischen zwei Platten"],
-    job: ["Stores charge in an electric field", "Almacena carga en un campo eléctrico", "Speichert Ladung im elektrischen Feld"], clash: ["battery"], d: "medium" },
-  { id: "inductor", name: ["Inductor (coil)", "Bobina", "Spule"], a: ["an inductor (coil)", "una bobina", "eine Spule"],
-    fn: ["stores energy in a magnetic field", "almacena energía en un campo magnético", "speichert Energie in einem Magnetfeld"],
-    job: ["Stores energy in a magnetic field", "Almacena energía en un campo magnético", "Speichert Energie im Magnetfeld"], clash: ["transformer", "relay"], d: "hard" },
-  { id: "diode", name: ["Diode", "Diodo", "Diode"], a: ["a diode", "un diodo", "eine Diode"],
-    fn: ["lets current flow in only one direction", "deja pasar la corriente en un solo sentido", "lässt Strom nur in eine Richtung durch"],
-    job: ["Lets current pass one way only", "Deja pasar la corriente en un solo sentido", "Lässt Strom nur in eine Richtung durch"], clash: ["led"], d: "medium" },
-  { id: "led", name: ["LED", "LED", "LED"], a: ["an LED", "un LED", "eine LED"],
-    fn: ["lights up when current flows through it in the forward direction", "se ilumina cuando la corriente lo atraviesa en sentido directo", "leuchtet, wenn Strom in Durchlassrichtung hindurchfließt"],
-    job: ["Gives off light", "Emite luz", "Gibt Licht ab"], clash: ["diode"], d: "easy" },
-  { id: "transistor", name: ["Transistor", "Transistor", "Transistor"], a: ["a transistor", "un transistor", "ein Transistor"],
-    fn: ["can amplify signals or act as an electronic switch", "puede amplificar señales o funcionar como interruptor electrónico", "kann Signale verstärken oder als elektronischer Schalter arbeiten"],
-    job: ["Amplifies or switches signals", "Amplifica o conmuta señales", "Verstärkt oder schaltet Signale"], clash: ["relay", "switch"], d: "medium" },
-  { id: "relay", name: ["Relay", "Relé", "Relais"], a: ["a relay", "un relé", "ein Relais"],
-    fn: ["uses an electromagnet to open or close a separate circuit", "usa un electroimán para abrir o cerrar otro circuito", "öffnet oder schließt mit einem Elektromagneten einen anderen Stromkreis"],
-    job: ["Switches a circuit with an electromagnet", "Conmuta un circuito con un electroimán", "Schaltet einen Stromkreis per Elektromagnet"], clash: ["transistor", "switch", "inductor"], d: "hard" },
-  { id: "fuse", name: ["Fuse", "Fusible", "Sicherung"], a: ["a fuse", "un fusible", "eine Schmelzsicherung"],
-    fn: ["melts and breaks the circuit if the current gets too high", "se funde y abre el circuito si la corriente es demasiado alta", "schmilzt durch und unterbricht den Stromkreis, wenn der Strom zu groß wird"],
-    job: ["Breaks the circuit on overcurrent", "Corta el circuito si hay sobrecorriente", "Unterbricht den Stromkreis bei Überstrom"], clash: ["resistor", "switch"], d: "easy" },
-  { id: "transformer", name: ["Transformer", "Transformador", "Transformator"], a: ["a transformer", "un transformador", "ein Transformator"],
-    fn: ["changes an AC voltage into a higher or lower one", "convierte una tensión alterna en otra más alta o más baja", "wandelt eine Wechselspannung in eine höhere oder niedrigere um"],
-    job: ["Steps AC voltage up or down", "Sube o baja la tensión alterna", "Setzt Wechselspannung herauf oder herab"], clash: ["inductor"], d: "medium" },
-  { id: "battery", name: ["Battery", "Batería", "Batterie"], a: ["a battery", "una batería", "eine Batterie"],
-    fn: ["supplies electrical energy from a chemical reaction", "suministra energía eléctrica a partir de una reacción química", "liefert elektrische Energie aus einer chemischen Reaktion"],
-    job: ["Turns chemical energy into electricity", "Convierte energía química en electricidad", "Wandelt chemische Energie in Strom um"], clash: ["capacitor", "generator", "solar"], d: "easy" },
-  { id: "switch", name: ["Switch", "Interruptor", "Schalter"], a: ["a switch", "un interruptor", "ein Schalter"],
-    fn: ["lets you open or close a circuit by hand", "permite abrir o cerrar un circuito a mano", "öffnet oder schließt einen Stromkreis von Hand"],
-    job: ["Opens or closes a circuit by hand", "Abre o cierra un circuito a mano", "Öffnet oder schließt einen Stromkreis von Hand"], clash: ["relay", "transistor", "fuse"], d: "easy" },
-  { id: "speaker", name: ["Loudspeaker", "Altavoz", "Lautsprecher"], a: ["a loudspeaker", "un altavoz", "ein Lautsprecher"],
-    fn: ["turns electrical signals into sound", "convierte señales eléctricas en sonido", "wandelt elektrische Signale in Schall um"],
-    job: ["Turns electrical signals into sound", "Convierte señales eléctricas en sonido", "Wandelt elektrische Signale in Schall um"], clash: ["mic"], d: "easy" },
-  { id: "mic", name: ["Microphone", "Micrófono", "Mikrofon"], a: ["a microphone", "un micrófono", "ein Mikrofon"],
-    fn: ["turns sound into electrical signals", "convierte el sonido en señales eléctricas", "wandelt Schall in elektrische Signale um"],
-    job: ["Turns sound into electrical signals", "Convierte el sonido en señales eléctricas", "Wandelt Schall in elektrische Signale um"], clash: ["speaker"], d: "easy" },
-  { id: "motor", name: ["Electric motor", "Motor eléctrico", "Elektromotor"], a: ["an electric motor", "un motor eléctrico", "ein Elektromotor"],
-    fn: ["turns electrical energy into motion", "convierte la energía eléctrica en movimiento", "wandelt elektrische Energie in Bewegung um"],
-    job: ["Turns electricity into motion", "Convierte electricidad en movimiento", "Wandelt Strom in Bewegung um"], clash: ["generator"], d: "easy" },
-  { id: "generator", name: ["Generator", "Generador", "Generator"], a: ["a generator", "un generador", "ein Generator"],
-    fn: ["turns motion into electrical energy", "convierte el movimiento en energía eléctrica", "wandelt Bewegung in elektrische Energie um"],
-    job: ["Turns motion into electricity", "Convierte movimiento en electricidad", "Wandelt Bewegung in Strom um"], clash: ["motor", "battery", "solar"], d: "medium" },
-  { id: "solar", name: ["Solar cell", "Célula solar", "Solarzelle"], a: ["a solar cell", "una célula solar", "eine Solarzelle"],
-    fn: ["turns light directly into electrical energy", "convierte la luz directamente en energía eléctrica", "wandelt Licht direkt in elektrische Energie um"],
-    job: ["Turns light into electricity", "Convierte luz en electricidad", "Wandelt Licht in Strom um"], clash: ["ldr", "battery", "generator"], d: "easy" },
-];
-
-/** Logic gates: outputs for inputs 00, 01, 10, 11 (NOT has a single input) and a description ("Which logic gate <desc>?") */
-export const GATES: { name: string; table?: [number, number, number, number]; desc: L; d: D }[] = [
-  { name: "AND", table: [0, 0, 0, 1], desc: ["outputs 1 only when all of its inputs are 1", "da 1 solo cuando todas sus entradas son 1", "gibt nur dann 1 aus, wenn alle Eingänge 1 sind"], d: "medium" },
-  { name: "OR", table: [0, 1, 1, 1], desc: ["outputs 1 when at least one input is 1", "da 1 cuando al menos una entrada es 1", "gibt 1 aus, sobald mindestens ein Eingang 1 ist"], d: "medium" },
-  { name: "XOR", table: [0, 1, 1, 0], desc: ["outputs 1 only when its two inputs are different", "da 1 solo cuando sus dos entradas son distintas", "gibt nur dann 1 aus, wenn seine beiden Eingänge verschieden sind"], d: "hard" },
-  { name: "NAND", table: [1, 1, 1, 0], desc: ["outputs 0 only when all of its inputs are 1", "da 0 solo cuando todas sus entradas son 1", "gibt nur dann 0 aus, wenn alle Eingänge 1 sind"], d: "hard" },
-  { name: "NOR", table: [1, 0, 0, 0], desc: ["outputs 1 only when all of its inputs are 0", "da 1 solo cuando todas sus entradas son 0", "gibt nur dann 1 aus, wenn alle Eingänge 0 sind"], d: "hard" },
-  { name: "XNOR", table: [1, 0, 0, 1], desc: ["outputs 1 only when its two inputs are equal", "da 1 solo cuando sus dos entradas son iguales", "gibt nur dann 1 aus, wenn seine beiden Eingänge gleich sind"], d: "hard" },
-  { name: "NOT", desc: ["simply inverts its single input", "simplemente invierte su única entrada", "invertiert einfach seinen einzigen Eingang"], d: "easy" },
-];
-
-/** Resistor colour code */
-export const COLOURS: L[] = [
-  ["black", "negro", "Schwarz"], ["brown", "marrón", "Braun"], ["red", "rojo", "Rot"], ["orange", "naranja", "Orange"], ["yellow", "amarillo", "Gelb"],
-  ["green", "verde", "Grün"], ["blue", "azul", "Blau"], ["violet", "violeta", "Violett"], ["grey", "gris", "Grau"], ["white", "blanco", "Weiß"],
 ];
 
 /** Abbreviations: [abbr, expansion, 3 made-up expansions with the same initials, difficulty] */
 export const ACRONYMS: [string, string, string[], D][] = [
   ["CPU", "Central Processing Unit", ["Computer Personal Unit", "Central Program Utility", "Core Power Unit"], "medium"],
-  ["GPU", "Graphics Processing Unit", ["General Power Unit", "Graphic Program Utility", "Game Processing Unit"], "medium"],
   ["RAM", "Random Access Memory", ["Rapid Action Memory", "Read And Modify", "Random Allocation Module"], "medium"],
-  ["ROM", "Read-Only Memory", ["Random Operating Memory", "Rapid Output Module", "Read-Once Machine"], "hard"],
   ["USB", "Universal Serial Bus", ["Unified System Board", "Universal Signal Box", "User Serial Bridge"], "easy"],
   ["LED", "Light-Emitting Diode", ["Low-Energy Device", "Light-Enhancing Display", "Linear Electric Diode"], "medium"],
   ["LCD", "Liquid Crystal Display", ["Light Contrast Diode", "Low-Cost Display", "Liquid Colour Device"], "medium"],
   ["HTML", "HyperText Markup Language", ["HighTech Modern Language", "HyperText Machine Language", "Home Tool Markup Language"], "medium"],
-  ["HTTP", "HyperText Transfer Protocol", ["High Transfer Text Protocol", "HyperText Transmission Program", "Home Terminal Transfer Protocol"], "medium"],
   ["URL", "Uniform Resource Locator", ["Universal Routing Link", "User Resource Line", "Unified Remote Location"], "hard"],
   ["GPS", "Global Positioning System", ["General Purpose Satellite", "Global Path Service", "Geographic Position Sensor"], "easy"],
   ["NASA", "National Aeronautics and Space Administration", ["North American Space Agency", "National Astronomy and Science Association", "National Aerospace Systems Authority"], "medium"],
@@ -227,45 +140,10 @@ export const ACRONYMS: [string, string, string[], D][] = [
   ["SONAR", "Sound Navigation And Ranging", ["Sonic Object Navigation And Recording", "Sound Oscillation Noise Analysis Radar", "Signal Over Noise Acoustic Ranging"], "hard"],
   ["PDF", "Portable Document Format", ["Printable Data File", "Public Document File", "Personal Data Format"], "medium"],
   ["AI", "Artificial Intelligence", ["Automated Information", "Advanced Interface", "Algorithmic Input"], "easy"],
-  ["IP", "Internet Protocol", ["Internal Port", "Information Path", "Internet Provider"], "medium"],
   ["SSD", "Solid-State Drive", ["Super Speed Disk", "Static Storage Device", "System Storage Disk"], "medium"],
-  ["HDD", "Hard Disk Drive", ["High-Density Disk", "Hard Data Device", "Hybrid Disk Drive"], "medium"],
-  ["AC", "Alternating Current", ["Active Current", "Amplified Charge", "Automatic Circuit"], "easy"],
-  ["DC", "Direct Current", ["Dual Current", "Digital Charge", "Dynamic Circuit"], "easy"],
-  ["PCB", "Printed Circuit Board", ["Power Control Box", "Primary Circuit Breaker", "Programmed Chip Base"], "hard"],
-  ["IC", "Integrated Circuit", ["Internal Chip", "Isolated Conductor", "Input Controller"], "medium"],
-  ["RFID", "Radio-Frequency Identification", ["Remote Field Identity Detection", "Radio File ID", "Rapid Frequency Indicator Device"], "hard"],
-  ["NFC", "Near-Field Communication", ["Network File Connection", "New Frequency Channel", "Near Fast Contact"], "hard"],
   ["SIM", "Subscriber Identity Module", ["Secure Internet Module", "System Information Memory", "Smart Interface Microchip"], "hard"],
   ["ISS", "International Space Station", ["Interstellar Space Ship", "International Satellite System", "Integrated Space Shuttle"], "easy"],
-  ["ASCII", "American Standard Code for Information Interchange", ["Advanced System Code for Internet Information", "American Software Character Index", "Automatic Standard Code for Input Interfaces"], "hard"],
-  ["BIOS", "Basic Input/Output System", ["Binary Integrated Operating Software", "Basic Internal Operating Setup", "Boot Instruction Operating System"], "hard"],
-  ["LAN", "Local Area Network", ["Large Access Node", "Linked Application Network", "Long-range Area Network"], "medium"],
   ["WWW", "World Wide Web", ["World Web Workspace", "Wide World Wireless", "World Wide Wireless"], "easy"],
-  ["SQL", "Structured Query Language", ["Simple Question Logic", "Standard Quick Language", "System Query List"], "hard"],
-  ["PWM", "Pulse-Width Modulation", ["Power Wave Management", "Phase-Wave Multiplier", "Pulse Watt Meter"], "hard"],
-  ["ADC", "Analog-to-Digital Converter", ["Automatic Data Controller", "Advanced Digital Circuit", "Amplified Direct Current"], "hard"],
-  ["DAC", "Digital-to-Analog Converter", ["Direct Access Controller", "Digital Amplifier Circuit", "Dual Audio Channel"], "hard"],
-];
-
-/** Programming languages & software: phrase for "Who created …?", label, creator, difficulty */
-export const CODE: { what: L; label: L; who: string; d: D }[] = [
-  { what: ["the programming language Python", "el lenguaje de programación Python", "die Programmiersprache Python"], label: ["Python", "Python", "Python"], who: "Guido van Rossum", d: "medium" },
-  { what: ["the programming language C", "el lenguaje de programación C", "die Programmiersprache C"], label: ["C", "C", "C"], who: "Dennis Ritchie", d: "hard" },
-  { what: ["the programming language C++", "el lenguaje de programación C++", "die Programmiersprache C++"], label: ["C++", "C++", "C++"], who: "Bjarne Stroustrup", d: "hard" },
-  { what: ["the programming language Java", "el lenguaje de programación Java", "die Programmiersprache Java"], label: ["Java", "Java", "Java"], who: "James Gosling", d: "hard" },
-  { what: ["the programming language JavaScript", "el lenguaje de programación JavaScript", "die Programmiersprache JavaScript"], label: ["JavaScript", "JavaScript", "JavaScript"], who: "Brendan Eich", d: "hard" },
-  { what: ["the programming language Ruby", "el lenguaje de programación Ruby", "die Programmiersprache Ruby"], label: ["Ruby", "Ruby", "Ruby"], who: "Yukihiro Matsumoto", d: "hard" },
-  { what: ["the programming language PHP", "el lenguaje de programación PHP", "die Programmiersprache PHP"], label: ["PHP", "PHP", "PHP"], who: "Rasmus Lerdorf", d: "hard" },
-  { what: ["the programming language Perl", "el lenguaje de programación Perl", "die Programmiersprache Perl"], label: ["Perl", "Perl", "Perl"], who: "Larry Wall", d: "hard" },
-  { what: ["the programming language C#", "el lenguaje de programación C#", "die Programmiersprache C#"], label: ["C#", "C#", "C#"], who: "Anders Hejlsberg", d: "hard" },
-  { what: ["the programming language TypeScript", "el lenguaje de programación TypeScript", "die Programmiersprache TypeScript"], label: ["TypeScript", "TypeScript", "TypeScript"], who: "Anders Hejlsberg", d: "hard" },
-  { what: ["the programming language Swift", "el lenguaje de programación Swift", "die Programmiersprache Swift"], label: ["Swift", "Swift", "Swift"], who: "Chris Lattner", d: "hard" },
-  { what: ["the programming language Lisp", "el lenguaje de programación Lisp", "die Programmiersprache Lisp"], label: ["Lisp", "Lisp", "Lisp"], who: "John McCarthy", d: "hard" },
-  { what: ["the programming language Rust", "el lenguaje de programación Rust", "die Programmiersprache Rust"], label: ["Rust", "Rust", "Rust"], who: "Graydon Hoare", d: "hard" },
-  { what: ["the programming language Fortran", "el lenguaje de programación Fortran", "die Programmiersprache Fortran"], label: ["Fortran", "Fortran", "Fortran"], who: "John Backus", d: "hard" },
-  { what: ["the Linux kernel", "el núcleo Linux", "den Linux-Kernel"], label: ["Linux kernel", "Núcleo Linux", "Linux-Kernel"], who: "Linus Torvalds", d: "medium" },
-  { what: ["the version control system Git", "el sistema de control de versiones Git", "die Versionsverwaltung Git"], label: ["Git", "Git", "Git"], who: "Linus Torvalds", d: "hard" },
 ];
 
 // ── space ───────────────────────────────────────────────────────────
@@ -451,7 +329,6 @@ export const GAS_FACTS: [string, L, string, string[], D][] = [
 
 /** Laws & principles: label, statement (quoted in the question), clash ids, difficulty */
 export const LAWS: { id: string; label: L; says: L; clash?: string[]; d: D }[] = [
-  { id: "ohm", label: ["Ohm's law", "Ley de Ohm", "Ohmsches Gesetz"], says: ["The current through a conductor is proportional to the voltage across it.", "La corriente que atraviesa un conductor es proporcional a la tensión aplicada.", "Der Strom durch einen Leiter ist proportional zur angelegten Spannung."], d: "medium" },
   { id: "archimedes", label: ["Archimedes' principle", "Principio de Arquímedes", "Archimedisches Prinzip"], says: ["A body in a fluid is pushed up by a force equal to the weight of the fluid it displaces.", "Un cuerpo sumergido en un fluido recibe un empuje igual al peso del fluido que desaloja.", "Ein Körper in einer Flüssigkeit erfährt einen Auftrieb, der so groß ist wie die Gewichtskraft der verdrängten Flüssigkeit."], d: "medium" },
   { id: "boyle", label: ["Boyle's law", "Ley de Boyle-Mariotte", "Gesetz von Boyle-Mariotte"], says: ["At constant temperature, the pressure of a gas is inversely proportional to its volume.", "A temperatura constante, la presión de un gas es inversamente proporcional a su volumen.", "Bei konstanter Temperatur ist der Druck eines Gases umgekehrt proportional zu seinem Volumen."], d: "hard" },
   { id: "hooke", label: ["Hooke's law", "Ley de Hooke", "Hookesches Gesetz"], says: ["The extension of a spring is proportional to the force pulling on it.", "El alargamiento de un muelle es proporcional a la fuerza que tira de él.", "Die Verlängerung einer Feder ist proportional zur Kraft, die an ihr zieht."], d: "medium" },
@@ -459,64 +336,8 @@ export const LAWS: { id: string; label: L; says: L; clash?: string[]; d: D }[] =
   { id: "newton2", label: ["Newton's second law", "Segunda ley de Newton", "Zweites newtonsches Gesetz"], says: ["Force equals mass times acceleration.", "La fuerza es igual a la masa por la aceleración.", "Kraft ist gleich Masse mal Beschleunigung."], d: "medium" },
   { id: "newton3", label: ["Newton's third law", "Tercera ley de Newton", "Drittes newtonsches Gesetz"], says: ["For every action there is an equal and opposite reaction.", "A toda acción se opone una reacción igual y de sentido contrario.", "Zu jeder Kraft gibt es eine gleich große, entgegengesetzt gerichtete Gegenkraft."], d: "easy" },
   { id: "gravity", label: ["Law of universal gravitation", "Ley de gravitación universal", "Gravitationsgesetz"], says: ["Every mass attracts every other mass.", "Toda masa atrae a cualquier otra masa.", "Jede Masse zieht jede andere Masse an."], clash: ["coulomb"], d: "medium" },
-  { id: "coulomb", label: ["Coulomb's law", "Ley de Coulomb", "Coulombsches Gesetz"], says: ["The force between two electric charges falls with the square of their distance.", "La fuerza entre dos cargas eléctricas disminuye con el cuadrado de su distancia.", "Die Kraft zwischen zwei elektrischen Ladungen nimmt mit dem Quadrat ihres Abstands ab."], clash: ["gravity"], d: "hard" },
-  { id: "kcl", label: ["Kirchhoff's current law", "Primera ley de Kirchhoff", "Erstes kirchhoffsches Gesetz"], says: ["The currents flowing into a junction add up to the currents flowing out of it.", "La suma de las corrientes que entran en un nudo es igual a la suma de las que salen.", "In einem Knotenpunkt ist die Summe der zufließenden Ströme gleich der Summe der abfließenden."], d: "hard" },
-  { id: "kvl", label: ["Kirchhoff's voltage law", "Segunda ley de Kirchhoff", "Zweites kirchhoffsches Gesetz"], says: ["The voltages around any closed loop of a circuit add up to zero.", "La suma de las tensiones a lo largo de una malla cerrada es cero.", "In jeder geschlossenen Masche ist die Summe aller Spannungen null."], d: "hard" },
-  { id: "lenz", label: ["Lenz's law", "Ley de Lenz", "Lenzsche Regel"], says: ["An induced current always flows so that it opposes the change that caused it.", "La corriente inducida siempre se opone al cambio que la produce.", "Ein induzierter Strom ist stets so gerichtet, dass er seiner Ursache entgegenwirkt."], d: "hard" },
-  { id: "moore", label: ["Moore's law", "Ley de Moore", "Mooresches Gesetz"], says: ["The number of transistors on a chip doubles roughly every two years.", "El número de transistores de un chip se duplica aproximadamente cada dos años.", "Die Zahl der Transistoren auf einem Chip verdoppelt sich etwa alle zwei Jahre."], d: "medium" },
   { id: "energy", label: ["Conservation of energy", "Conservación de la energía", "Energieerhaltungssatz"], says: ["Energy cannot be created or destroyed, only converted from one form into another.", "La energía no se crea ni se destruye, solo se transforma.", "Energie kann weder erzeugt noch vernichtet, sondern nur umgewandelt werden."], d: "easy" },
   { id: "pascal", label: ["Pascal's principle", "Principio de Pascal", "Pascalsches Prinzip"], says: ["Pressure applied to an enclosed fluid spreads equally in all directions.", "La presión ejercida sobre un fluido encerrado se transmite por igual en todas las direcciones.", "Druck auf eine eingeschlossene Flüssigkeit breitet sich gleichmäßig in alle Richtungen aus."], d: "hard" },
-];
-
-/** Formulas → quantity. f = formula as written in each language */
-export const EQUATIONS: { id: string; f: L; q: L; clash?: string[]; d: D }[] = [
-  { id: "force", f: ["F = m · a", "F = m · a", "F = m · a"], q: ["Force", "Fuerza", "Kraft"], d: "easy" },
-  { id: "energy", f: ["E = m · c²", "E = m · c²", "E = m · c²"], q: ["Energy", "Energía", "Energie"], clash: ["work", "ekin", "epot"], d: "easy" },
-  { id: "voltage", f: ["V = I · R", "U = R · I", "U = R · I"], q: ["Voltage", "Tensión eléctrica", "Elektrische Spannung"], d: "medium" },
-  { id: "power", f: ["P = V · I", "P = U · I", "P = U · I"], q: ["Electrical power", "Potencia eléctrica", "Elektrische Leistung"], d: "medium" },
-  { id: "speed", f: ["v = d / t", "v = d / t", "v = s / t"], q: ["Speed", "Velocidad", "Geschwindigkeit"], d: "easy" },
-  { id: "density", f: ["ρ = m / V", "ρ = m / V", "ρ = m / V"], q: ["Density", "Densidad", "Dichte"], d: "medium" },
-  { id: "pressure", f: ["p = F / A", "p = F / A", "p = F / A"], q: ["Pressure", "Presión", "Druck"], d: "medium" },
-  { id: "work", f: ["W = F · d", "W = F · d", "W = F · s"], q: ["Work", "Trabajo", "Arbeit"], clash: ["energy", "ekin", "epot"], d: "medium" },
-  { id: "charge", f: ["Q = I · t", "Q = I · t", "Q = I · t"], q: ["Electric charge", "Carga eléctrica", "Elektrische Ladung"], d: "hard" },
-  { id: "freq", f: ["f = 1 / T", "f = 1 / T", "f = 1 / T"], q: ["Frequency", "Frecuencia", "Frequenz"], d: "medium" },
-  { id: "accel", f: ["a = Δv / Δt", "a = Δv / Δt", "a = Δv / Δt"], q: ["Acceleration", "Aceleración", "Beschleunigung"], d: "medium" },
-  { id: "current", f: ["I = V / R", "I = U / R", "I = U / R"], q: ["Electric current", "Corriente eléctrica", "Elektrische Stromstärke"], d: "medium" },
-  { id: "resistance", f: ["R = V / I", "R = U / I", "R = U / I"], q: ["Electrical resistance", "Resistencia eléctrica", "Elektrischer Widerstand"], d: "medium" },
-  { id: "momentum", f: ["p = m · v", "p = m · v", "p = m · v"], q: ["Momentum", "Cantidad de movimiento", "Impuls"], d: "hard" },
-  { id: "ekin", f: ["E = ½ · m · v²", "E = ½ · m · v²", "E = ½ · m · v²"], q: ["Kinetic energy", "Energía cinética", "Kinetische Energie"], clash: ["energy", "work", "epot"], d: "medium" },
-  { id: "epot", f: ["E = m · g · h", "E = m · g · h", "E = m · g · h"], q: ["Potential energy", "Energía potencial", "Potenzielle Energie"], clash: ["energy", "work", "ekin"], d: "medium" },
-];
-
-/** SI units named after people: unit label, quantity (lower-case en/es, de as noun), person, difficulty */
-export const UNIT_PEOPLE: { unit: L; qty: L; who: string; sym: string; d: D }[] = [
-  { unit: ["Volt", "Voltio", "Volt"], qty: ["voltage", "tensión eléctrica", "elektrische Spannung"], who: "Alessandro Volta", sym: "V", d: "medium" },
-  { unit: ["Ampere", "Amperio", "Ampere"], qty: ["electric current", "corriente eléctrica", "elektrische Stromstärke"], who: "André-Marie Ampère", sym: "A", d: "medium" },
-  { unit: ["Ohm", "Ohmio", "Ohm"], qty: ["electrical resistance", "resistencia eléctrica", "elektrischer Widerstand"], who: "Georg Simon Ohm", sym: "Ω", d: "medium" },
-  { unit: ["Watt", "Vatio", "Watt"], qty: ["power", "potencia", "Leistung"], who: "James Watt", sym: "W", d: "medium" },
-  { unit: ["Newton", "Newton", "Newton"], qty: ["force", "fuerza", "Kraft"], who: "Isaac Newton", sym: "N", d: "easy" },
-  { unit: ["Joule", "Julio", "Joule"], qty: ["energy", "energía", "Energie"], who: "James Prescott Joule", sym: "J", d: "medium" },
-  { unit: ["Hertz", "Hercio", "Hertz"], qty: ["frequency", "frecuencia", "Frequenz"], who: "Heinrich Hertz", sym: "Hz", d: "medium" },
-  { unit: ["Pascal", "Pascal", "Pascal"], qty: ["pressure", "presión", "Druck"], who: "Blaise Pascal", sym: "Pa", d: "medium" },
-  { unit: ["Kelvin", "Kelvin", "Kelvin"], qty: ["thermodynamic temperature", "temperatura termodinámica", "thermodynamische Temperatur"], who: "Lord Kelvin", sym: "K", d: "medium" },
-  { unit: ["Coulomb", "Culombio", "Coulomb"], qty: ["electric charge", "carga eléctrica", "elektrische Ladung"], who: "Charles-Augustin de Coulomb", sym: "C", d: "hard" },
-  { unit: ["Farad", "Faradio", "Farad"], qty: ["capacitance", "capacidad eléctrica", "elektrische Kapazität"], who: "Michael Faraday", sym: "F", d: "hard" },
-  { unit: ["Tesla", "Tesla", "Tesla"], qty: ["magnetic flux density", "densidad de flujo magnético", "magnetische Flussdichte"], who: "Nikola Tesla", sym: "T", d: "hard" },
-  { unit: ["Henry", "Henrio", "Henry"], qty: ["inductance", "inductancia", "Induktivität"], who: "Joseph Henry", sym: "H", d: "hard" },
-  { unit: ["Weber", "Weber", "Weber"], qty: ["magnetic flux", "flujo magnético", "magnetischer Fluss"], who: "Wilhelm Weber", sym: "Wb", d: "hard" },
-  { unit: ["Siemens", "Siemens", "Siemens"], qty: ["electrical conductance", "conductancia eléctrica", "elektrischer Leitwert"], who: "Werner von Siemens", sym: "S", d: "hard" },
-  { unit: ["Becquerel", "Becquerel", "Becquerel"], qty: ["radioactivity", "actividad radiactiva", "Radioaktivität (Aktivität)"], who: "Henri Becquerel", sym: "Bq", d: "hard" },
-  { unit: ["Sievert", "Sievert", "Sievert"], qty: ["equivalent radiation dose", "dosis equivalente de radiación", "Äquivalentdosis"], who: "Rolf Sievert", sym: "Sv", d: "hard" },
-  { unit: ["Gray", "Gray", "Gray"], qty: ["absorbed radiation dose", "dosis de radiación absorbida", "Energiedosis"], who: "Louis Harold Gray", sym: "Gy", d: "hard" },
-];
-/** further SI units for the symbol question (not named after people) */
-export const OTHER_UNITS: { unit: L; sym: string; d: D }[] = [
-  { unit: ["Metre", "Metro", "Meter"], sym: "m", d: "easy" },
-  { unit: ["Second", "Segundo", "Sekunde"], sym: "s", d: "easy" },
-  { unit: ["Kilogram", "Kilogramo", "Kilogramm"], sym: "kg", d: "easy" },
-  { unit: ["Mole", "Mol", "Mol"], sym: "mol", d: "medium" },
-  { unit: ["Candela", "Candela", "Candela"], sym: "cd", d: "hard" },
-  { unit: ["Lux", "Lux", "Lux"], sym: "lx", d: "hard" },
 ];
 
 // ── materials ───────────────────────────────────────────────────────
@@ -543,9 +364,6 @@ export const CONDUCTORS: L[] = [
 export const INSULATORS: L[] = [
   ["Rubber", "Goma", "Gummi"], ["Glass", "Vidrio", "Glas"], ["Dry wood", "Madera seca", "Trockenes Holz"], ["Plastic (PVC)", "Plástico (PVC)", "Kunststoff (PVC)"],
   ["Porcelain", "Porcelana", "Porzellan"], ["Dry air", "Aire seco", "Trockene Luft"], ["Paper", "Papel", "Papier"],
-];
-export const SEMICONDUCTORS: L[] = [
-  ["Silicon", "Silicio", "Silizium"], ["Germanium", "Germanio", "Germanium"], ["Gallium arsenide", "Arseniuro de galio", "Galliumarsenid"], ["Silicon carbide", "Carburo de silicio", "Siliziumkarbid"],
 ];
 export const MAGNETIC: L[] = [["Iron", "Hierro", "Eisen"], ["Nickel", "Níquel", "Nickel"], ["Cobalt", "Cobalto", "Cobalt"], ["Steel", "Acero", "Stahl"]];
 export const NON_MAGNETIC: L[] = [
