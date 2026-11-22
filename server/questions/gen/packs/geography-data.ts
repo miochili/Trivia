@@ -546,7 +546,7 @@ export const FORMER_CAPITALS: [string, L, L[], L?][] = [
   ["brazil", ["Rio de Janeiro", "Río de Janeiro", "Rio de Janeiro"], [["São Paulo", "São Paulo", "São Paulo"], ["Recife", "Recife", "Recife"], ["Belo Horizonte", "Belo Horizonte", "Belo Horizonte"]]],
   ["turkey", ["Istanbul", "Estambul", "Istanbul"], [["Izmir", "Esmirna", "Izmir"], ["Antalya", "Antalya", "Antalya"], ["Adana", "Adana", "Adana"]]],
   ["nigeria", ["Lagos", "Lagos", "Lagos"], [["Kano", "Kano", "Kano"], ["Ibadan", "Ibadán", "Ibadan"], ["Port Harcourt", "Port Harcourt", "Port Harcourt"]]],
-  ["kazakhstan", ["Almaty", "Almaty", "Almaty"], [["Shymkent", "Shymkent", "Schymkent"], ["Karaganda", "Karagandá", "Qaraghandy"], ["Aktau", "Aktau", "Aqtau"]]],
+  ["kazakhstan", ["Almaty", "Almaty", "Almaty"], [["Shymkent", "Shymkent", "Schymkent"], ["Karaganda", "Karagandá", "Karaganda"], ["Aktau", "Aktau", "Aktau"]]],
   ["pakistan", ["Karachi", "Karachi", "Karatschi"], [["Lahore", "Lahore", "Lahore"], ["Peshawar", "Peshawar", "Peschawar"], ["Quetta", "Quetta", "Quetta"]]],
   ["australia", ["Melbourne", "Melbourne", "Melbourne"], [["Sydney", "Sídney", "Sydney"], ["Brisbane", "Brisbane", "Brisbane"], ["Perth", "Perth", "Perth"]]],
   ["japan", ["Kyoto", "Kioto", "Kyoto"], [["Nagoya", "Nagoya", "Nagoya"], ["Yokohama", "Yokohama", "Yokohama"], ["Sapporo", "Sapporo", "Sapporo"]]],

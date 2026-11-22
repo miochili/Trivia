@@ -149,7 +149,10 @@ export async function startHosting(): Promise<{ transport: Transport; code: stri
   if (!peer) throw new Error("err.noResponse");
   const hostPeer = peer;
 
-  const manager = new RoomManager({ questionBank: new InMemoryQuestionBank(), persistence: new NoopPersistence() });
+  const questionBank = new InMemoryQuestionBank();
+  // Build the question list in the background while everyone is still in the lobby.
+  setTimeout(() => questionBank.warmUp(), 1500);
+  const manager = new RoomManager({ questionBank, persistence: new NoopPersistence() });
   const LOCAL_ID = "host-local";
   const dispatch = createDispatcher(manager, { fixedRoomCode: code, canCreateRoom: (c) => c.id === LOCAL_ID });
   manager.addConn({ id: LOCAL_ID, send: (e, p) => queueMicrotask(() => hub.fire(e, p)) });

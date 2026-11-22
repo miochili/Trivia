@@ -18,7 +18,9 @@ export async function createDataLayer(): Promise<{ questionBank: QuestionBank; p
     const prisma = await getPrisma();
     return { questionBank: new PrismaQuestionBank(prisma), persistence: new PrismaPersistence(prisma) };
   }
-  return { questionBank: new InMemoryQuestionBank(), persistence: new NoopPersistence() };
+  const questionBank = new InMemoryQuestionBank();
+  questionBank.warmUp();
+  return { questionBank, persistence: new NoopPersistence() };
 }
 
 /** Attaches the Socket.io game server to an existing HTTP server. */

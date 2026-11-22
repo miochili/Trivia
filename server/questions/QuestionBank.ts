@@ -30,15 +30,22 @@ export interface QuestionBank {
 
 export class InMemoryQuestionBank implements QuestionBank {
   readonly kind = "memory" as const;
-  private readonly all: StoredQuestion[];
+  private all: StoredQuestion[] | null;
 
+  /** Without `questions`, the ~87k built-in questions are generated on first use (or by warmUp()). */
   constructor(questions?: StoredQuestion[]) {
-    this.all = questions ?? [...classicQuestions(), ...generatedQuestions()];
+    this.all = questions ?? null;
+  }
+
+  /** Builds the question list now (call while players wait in the lobby). */
+  warmUp() {
+    this.all ??= [...classicQuestions(), ...generatedQuestions()];
+    return this.all;
   }
 
   async loadPool(categories: CategoryId[]) {
     const set = new Set(categories);
-    return this.all.filter((q) => set.has(q.category));
+    return this.warmUp().filter((q) => set.has(q.category));
   }
 }
 

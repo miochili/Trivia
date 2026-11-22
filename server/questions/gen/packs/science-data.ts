@@ -350,7 +350,7 @@ export const ASTRO: Fact[] = [
     ["James Webb", "James Webb", "James Webb"], [["Hubble", "Hubble", "Hubble"], ["Kepler", "Kepler", "Kepler"], ["Spitzer", "Spitzer", "Spitzer"]], "medium"],
   ["betelgeuse", ["In which constellation is the red supergiant Betelgeuse?", "¿En qué constelación está la supergigante roja Betelgeuse?", "In welchem Sternbild steht der Rote Überriese Beteigeuze?"],
     ["Orion", "Orión", "Orion"], [["Ursa Major", "Osa Mayor", "Großer Bär"], ["Cassiopeia", "Casiopea", "Kassiopeia"], ["Leo", "Leo", "Löwe"], ["Scorpius", "Escorpio", "Skorpion"]], "hard"],
-  ["charon", ["Charon is the largest moon of which dwarf planet?", "Caronte es la luna más grande de qué planeta enano?", "Charon ist der größte Mond welches Zwergplaneten?"],
+  ["charon", ["Charon is the largest moon of which dwarf planet?", "¿De qué planeta enano es Caronte la luna más grande?", "Charon ist der größte Mond welches Zwergplaneten?"],
     ["Pluto", "Plutón", "Pluto"], [["Ceres", "Ceres", "Ceres"], ["Eris", "Eris", "Eris"], ["Haumea", "Haumea", "Haumea"], ["Makemake", "Makemake", "Makemake"]], "hard"],
   ["year", ["How long does the Earth take to orbit the Sun once?", "¿Cuánto tarda la Tierra en dar una vuelta al Sol?", "Wie lange braucht die Erde für einen Umlauf um die Sonne?"],
     ["About 365 days", "Unos 365 días", "Etwa 365 Tage"], [["About 24 hours", "Unas 24 horas", "Etwa 24 Stunden"], ["About 30 days", "Unos 30 días", "Etwa 30 Tage"], ["About 687 days", "Unos 687 días", "Etwa 687 Tage"]], "easy"],
@@ -359,8 +359,6 @@ export const ASTRO: Fact[] = [
 ];
 
 // ── physics constants & everyday values (labels built in science.ts) ─
-/** [stem, question, value label, wrong labels, difficulty] — numbers formatted per language in science.ts via n() */
-export const N = (en: string, es: string, de: string): L => [en, es, de];
 
 // ── body ────────────────────────────────────────────────────────────
 /** [stem, question, answer, wrong numbers, unit (optional), difficulty] */
@@ -375,7 +373,7 @@ export const BODY_NUMBERS: [string, L, number, number[], L | null, D][] = [
   ["neck", ["How many vertebrae are in the human neck?", "¿Cuántas vértebras tiene el cuello humano?", "Wie viele Halswirbel hat der Mensch?"], 7, [3, 5, 9, 12, 14], null, "hard"],
   ["ossicles", ["How many tiny bones (ossicles) are in each middle ear?", "¿Cuántos huesecillos hay en cada oído medio?", "Wie viele Gehörknöchelchen hat jedes Mittelohr?"], 3, [1, 2, 5, 6, 8], null, "hard"],
   ["hand", ["How many bones are in one human hand (including the wrist)?", "¿Cuántos huesos tiene una mano humana (incluida la muñeca)?", "Wie viele Knochen hat eine menschliche Hand (mit Handwurzel)?"], 27, [12, 15, 19, 35, 42], null, "hard"],
-  ["blood", ["Roughly how much blood does an adult have?", "¿Aproximadamente cuánta sangre tiene una persona adulta?", "Wie viel Blut hat ein Erwachsener ungefähr?"], 5, [1, 2, 10, 15, 20], ["litres", "litros", "Liter"], "medium"],
+  ["blood", ["Roughly how much blood does an adult have?", "¿Aproximadamente cuánta sangre tiene una persona adulta?", "Wie viel Blut hat ein Erwachsener ungefähr?"], 5, [2, 10, 15, 20, 25], ["litres", "litros", "Liter"], "medium"],
   ["temp", ["What is the normal human body temperature, roughly?", "¿Cuál es, aproximadamente, la temperatura normal del cuerpo humano?", "Wie hoch ist die normale Körpertemperatur des Menschen ungefähr?"], 37, [31, 33, 40, 42, 45], ["°C", "°C", "°C"], "easy"],
   ["lung-lobes", ["How many lobes does the right lung have?", "¿Cuántos lóbulos tiene el pulmón derecho?", "Wie viele Lappen hat der rechte Lungenflügel?"], 3, [1, 2, 5, 6], null, "hard"],
 ];
