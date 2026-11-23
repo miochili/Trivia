@@ -302,7 +302,6 @@ export const CHARACTERS: [string, string, string, string][] = [
   ["Player 456 (Seong Gi-hun)", "Jugador 456 (Seong Gi-hun)", "Spieler 456 (Seong Gi-hun)", "squidgame"],
   ["Hermione Granger", "Hermione Granger", "Hermione Granger", "harrypotter"],
   ["Albus Dumbledore", "Albus Dumbledore", "Albus Dumbledore", "harrypotter"],
-  ["Severus Snape", "Severus Snape", "Severus Snape", "harrypotter"],
   ["Frodo Baggins", "Frodo Bolsón", "Frodo Beutlin", "lotr"],
   ["Gandalf", "Gandalf", "Gandalf", "lotr"],
   ["Gollum", "Gollum", "Gollum", "lotr"],

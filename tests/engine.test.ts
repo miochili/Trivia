@@ -552,3 +552,18 @@ describe("pick the difficulty", () => {
     expect(["medium", "hard"]).toContain(g.st().activeQuestion!.question.difficulty);
   });
 });
+
+describe("no time limit", () => {
+  it("with questionTimerSec 0 the question stays open until someone answers", () => {
+    const g = setup({ tiles: board([C, C, C, C]), rolls: [2], settings: { questionTimerSec: 0 } });
+    g.engine.start();
+    g.engine.roll("a");
+    g.settleMove(2);
+    expect(g.st().phase).toBe("question");
+    expect(g.st().activeQuestion!.endsAt).toBe(0);
+    vi.advanceTimersByTime(10 * 60_000);
+    expect(g.st().phase).toBe("question");
+    g.engine.submitAnswer("a", g.st().activeQuestion!.question.id, g.rightIndex());
+    expect(g.st().lastReveal).toMatchObject({ correct: true });
+  });
+});

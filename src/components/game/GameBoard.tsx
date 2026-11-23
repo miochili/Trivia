@@ -53,7 +53,7 @@ export function GameBoard({ game, loopMode, center }: { game: PublicGameState; l
           const pos = Math.min(displayPos[s.id] ?? s.position, ring.length - 1);
           const g = ring[pos];
           const group = byTile.get(pos) ?? [s.id];
-          const { dx, dy } = pawnOffset(group.indexOf(s.id), group.length, g.angle, tokenR);
+          const { dx, dy } = pawnOffset(group.indexOf(s.id), group.length, g.angle, tokenR, g.thick);
           const active = game.currentSideId === s.id && game.phase !== "game_over";
           return (
             <motion.g
@@ -170,7 +170,7 @@ function TileShape({ tile, geo, loopMode, owners }: { tile: Tile; geo: RingTile;
     fill = CATEGORY_META[tile.category].color;
     title = `${tile.hq ? t("board.hqTitle", { cat: tile.category }) : t(`cat.${tile.category}`)} (${t("board.tile", { n: tile.index })})`;
   }
-  const crest = polar(R_OUT - 4, geo.angle);
+  const crest = polar(geo.rOut - 4, geo.angle);
   return (
     <g>
       <path d={geo.path} fill={fill} stroke={stroke} strokeWidth={strokeW} strokeLinejoin="round" />
@@ -182,7 +182,7 @@ function TileShape({ tile, geo, loopMode, owners }: { tile: Tile; geo: RingTile;
         </>
       )}
       {owners.map((c, i) => {
-        const p = polar(R_IN + 12, geo.angle + (i - (owners.length - 1) / 2) * (14 / R_IN));
+        const p = polar(geo.rIn + 12, geo.angle + (i - (owners.length - 1) / 2) * (14 / geo.rIn));
         return <circle key={i} cx={p.x} cy={p.y} r="6" fill={c} stroke="#f7eed5" strokeWidth="2" />;
       })}
       <title>{title}</title>
@@ -194,15 +194,15 @@ function TileIcon({ tile, geo, loopMode }: { tile: Tile; geo: RingTile; loopMode
   const { t } = useT();
   const size = Math.min(40, geo.arc * 0.68);
   const label = Math.min(24, geo.arc * 0.3);
-  const crest = polar(R_OUT - 4, geo.angle);
+  const crest = polar(geo.rOut - 4, geo.angle);
   let icon = "";
   let text: string | null = null;
   if (tile.kind === "start") [icon, text] = ["🚩", t("board.start")];
   else if (tile.kind === "finish") [icon, text] = loopMode ? ["↻", t("board.lap")] : ["👑", t("board.finish")];
   else if (tile.kind === "special" && tile.special) icon = SPECIAL_META[tile.special].icon;
   else if (tile.category) icon = CATEGORY_META[tile.category].icon;
-  const inner = polar(R_MID - THICK * 0.18, geo.angle);
-  const outer = polar(R_MID + THICK * 0.2, geo.angle);
+  const inner = polar(geo.rMid - geo.thick * 0.18, geo.angle);
+  const outer = polar(geo.rMid + geo.thick * 0.2, geo.angle);
   return (
     <g pointerEvents="none">
       <text x={text ? outer.x : geo.cx} y={(text ? outer.y : geo.cy) + size * 0.35} textAnchor="middle" fontSize={size}>

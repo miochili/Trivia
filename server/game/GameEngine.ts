@@ -170,7 +170,7 @@ export class GameEngine {
     if (this.phase === "steal" && aq) return this.trySteal(playerId, askId, optionIndex);
     if (this.phase !== "question" || !aq) throw new GameError("err.noQuestionOpen");
     if (aq.view.question.id !== askId) throw new GameError("err.staleQuestion");
-    if (Date.now() > aq.view.endsAt + TIMING.ANSWER_GRACE_MS) throw new GameError("err.timeUp");
+    if (aq.view.endsAt && Date.now() > aq.view.endsAt + TIMING.ANSWER_GRACE_MS) throw new GameError("err.timeUp");
     if (optionIndex < 0 || optionIndex >= aq.view.question.options.length) throw new GameError("err.badOption");
     if (aq.view.answerMode === "vote") {
       if (!this.currentSide.memberIds.includes(playerId)) throw new GameError("err.notTeammate");
@@ -454,7 +454,7 @@ export class GameEngine {
       },
       sideId: side.id,
       answererId,
-      endsAt: now + this.settings.questionTimerSec * 1000,
+      endsAt: this.settings.questionTimerSec ? now + this.settings.questionTimerSec * 1000 : 0,
       hq: !!tile.hq,
       doublePoints: side.doublePoints,
       answerMode: side.memberIds.length < 2 ? "solo" : this.settings.teamAnswer === "captain" ? "captain" : "vote",
@@ -465,7 +465,8 @@ export class GameEngine {
     this.phase = "question";
     this.deps.emit({ type: S2C.QUESTION, payload: { ...structuredClone(view), serverNow: now } });
     this.changed();
-    this.schedule(this.settings.questionTimerSec * 1000 + TIMING.ANSWER_GRACE_MS, () => this.onQuestionTimeout());
+    // 0 = no time limit: the question stays open until it is answered.
+    if (this.settings.questionTimerSec) this.schedule(this.settings.questionTimerSec * 1000 + TIMING.ANSWER_GRACE_MS, () => this.onQuestionTimeout());
   }
 
   private resolveAnswer(chosenIndex: number | null, timedOut: boolean) {

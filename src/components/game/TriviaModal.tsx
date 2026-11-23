@@ -179,8 +179,12 @@ export function TriviaModal({ room, game }: { room: PublicRoomState; game: Publi
               </div>
               {steal ? (
                 <Hourglass key="steal" endsAt={steal.endsAt} total={TIMING.STEAL_MS / 1000} stopped={!!reveal} />
-              ) : (
+              ) : aq.endsAt ? (
                 <Hourglass key="q" endsAt={aq.endsAt} total={room.settings.questionTimerSec} stopped={!!reveal} />
+              ) : (
+                <span key="q" className="flex shrink-0 flex-col items-center font-display text-4xl leading-none text-brass-dark" role="timer" aria-label={t("settings.noLimit")} title={t("settings.noLimit")}>
+                  ∞
+                </span>
               )}
             </div>
 

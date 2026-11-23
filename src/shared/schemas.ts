@@ -27,10 +27,8 @@ const avatar = z.string().max(12).refine(isValidAvatar, "Unknown character");
 export const settingsPatchSchema = z
   .object({
     mode: z.enum(["ffa", "teams"]),
-    boardLength: z.union(BOARD_LENGTHS.map((n) => z.literal(n)) as [z.ZodLiteral<30>, z.ZodLiteral<50>, z.ZodLiteral<70>]),
-    questionTimerSec: z.union(
-      QUESTION_TIMERS.map((n) => z.literal(n)) as [z.ZodLiteral<15>, z.ZodLiteral<30>, z.ZodLiteral<45>],
-    ),
+    boardLength: z.custom<(typeof BOARD_LENGTHS)[number]>((v) => (BOARD_LENGTHS as readonly unknown[]).includes(v), "Invalid board length"),
+    questionTimerSec: z.custom<(typeof QUESTION_TIMERS)[number]>((v) => (QUESTION_TIMERS as readonly unknown[]).includes(v), "Invalid timer"),
     categories: z.array(z.enum(CATEGORY_IDS)).min(2, "Pick at least 2 categories").max(CATEGORY_IDS.length),
     winCondition: z.enum(["finish", "trophies", "either"]),
     correctAnswerRule: z.enum(["stay", "bonus_move", "roll_again"]),

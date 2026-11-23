@@ -116,6 +116,8 @@ export function SettingsPanel() {
               { value: 30, label: t("settings.tiles", { n: 30 }) },
               { value: 50, label: t("settings.tiles", { n: 50 }) },
               { value: 70, label: t("settings.tiles", { n: 70 }) },
+              { value: 100, label: t("settings.tiles", { n: 100 }) },
+              { value: 150, label: t("settings.tiles", { n: 150 }) },
             ]}
           />
         </Field>
@@ -130,6 +132,8 @@ export function SettingsPanel() {
               { value: 15, label: t("settings.seconds", { n: 15 }) },
               { value: 30, label: t("settings.seconds", { n: 30 }) },
               { value: 45, label: t("settings.seconds", { n: 45 }) },
+              { value: 60, label: t("settings.seconds", { n: 60 }) },
+              { value: 0, label: t("settings.noLimit") },
             ]}
           />
         </Field>

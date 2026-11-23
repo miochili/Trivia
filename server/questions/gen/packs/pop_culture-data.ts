@@ -165,31 +165,6 @@ export const HOUSES: [string, string][] = [
   ["Ernie Macmillan", "Hufflepuff"], ["Hannah Abbott", "Hufflepuff"],
 ];
 
-export const HP_KINDS: Record<string, L> = {
-  owl: ["An owl", "Una lechuza", "Eine Eule"], cat: ["A cat", "Un gato", "Eine Katze"], rat: ["A rat", "Una rata", "Eine Ratte"],
-  phoenix: ["A phoenix", "Un fénix", "Ein Phönix"], hippogriff: ["A hippogriff", "Un hipogrifo", "Ein Hippogreif"], snake: ["A snake", "Una serpiente", "Eine Schlange"],
-  dog3: ["A three-headed dog", "Un perro de tres cabezas", "Ein dreiköpfiger Hund"], dragon: ["A dragon", "Un dragón", "Ein Drache"],
-  spider: ["A giant spider", "Una araña gigante", "Eine Riesenspinne"], dog: ["A dog", "Un perro", "Ein Hund"],
-  elf: ["A house-elf", "Un elfo doméstico", "Ein Hauself"], giant: ["A giant", "Un gigante", "Ein Riese"],
-};
-/** [name en, es, de, kind, kinds never offered as wrong] */
-export const HP_CREATURES: [string, string, string, string, string[]?][] = [
-  ["Hedwig", "Hedwig", "Hedwig", "owl"], ["Crookshanks", "Crookshanks", "Krummbein", "cat"], ["Scabbers", "Scabbers", "Krätze", "rat"],
-  ["Fawkes", "Fawkes", "Fawkes", "phoenix"], ["Buckbeak", "Buckbeak", "Seidenschnabel", "hippogriff"], ["Nagini", "Nagini", "Nagini", "snake"],
-  ["Fluffy", "Fluffy", "Fluffy", "dog3", ["dog"]], ["Norbert", "Norberto", "Norbert", "dragon"], ["Aragog", "Aragog", "Aragog", "spider"],
-  ["Fang", "Fang", "Fang", "dog", ["dog3"]], ["Errol", "Errol", "Errol", "owl"], ["Dobby", "Dobby", "Dobby", "elf"], ["Kreacher", "Kreacher", "Kreacher", "elf"],
-  ["Grawp", "Grawp", "Grawp", "giant"],
-];
-export const HP_BOOKS: L[] = [
-  ["Harry Potter and the Philosopher's Stone", "Harry Potter y la piedra filosofal", "Harry Potter und der Stein der Weisen"],
-  ["Harry Potter and the Chamber of Secrets", "Harry Potter y la cámara secreta", "Harry Potter und die Kammer des Schreckens"],
-  ["Harry Potter and the Prisoner of Azkaban", "Harry Potter y el prisionero de Azkaban", "Harry Potter und der Gefangene von Askaban"],
-  ["Harry Potter and the Goblet of Fire", "Harry Potter y el cáliz de fuego", "Harry Potter und der Feuerkelch"],
-  ["Harry Potter and the Order of the Phoenix", "Harry Potter y la Orden del Fénix", "Harry Potter und der Orden des Phönix"],
-  ["Harry Potter and the Half-Blood Prince", "Harry Potter y el misterio del príncipe", "Harry Potter und der Halbblutprinz"],
-  ["Harry Potter and the Deathly Hallows", "Harry Potter y las Reliquias de la Muerte", "Harry Potter und die Heiligtümer des Todes"],
-];
-
 export const PTYPES: Record<string, L> = {
   electric: ["Electric", "Eléctrico", "Elektro"], fire: ["Fire", "Fuego", "Feuer"], water: ["Water", "Agua", "Wasser"], grass: ["Grass", "Planta", "Pflanze"],
   psychic: ["Psychic", "Psíquico", "Psycho"], ghost: ["Ghost", "Fantasma", "Geist"], fighting: ["Fighting", "Lucha", "Kampf"], bug: ["Bug", "Bicho", "Käfer"],
@@ -475,8 +450,8 @@ export const PLACES: [string, string, string, string][] = [
   ["Gotham City", "Gotham City", "Gotham City", "batman"], ["Metropolis", "Metrópolis", "Metropolis", "superman"], ["Krypton", "Krypton", "Krypton", "superman"],
   ["Springfield", "Springfield", "Springfield", "simpsons"], ["Bikini Bottom", "Fondo de Bikini", "Bikini Bottom", "spongebob"], ["Arendelle", "Arendelle", "Arendelle", "frozen"],
   ["Agrabah", "Agrabah", "Agrabah", "aladdin"], ["Neverland", "El País de Nunca Jamás", "Nimmerland", "peterpan"], ["Middle-earth", "La Tierra Media", "Mittelerde", "lotr"],
-  ["Mordor", "Mordor", "Mordor", "lotr"], ["The Shire", "La Comarca", "Das Auenland", "lotr"], ["Diagon Alley", "El callejón Diagon", "Die Winkelgasse", "hp"],
-  ["Hogsmeade", "Hogsmeade", "Hogsmeade", "hp"], ["Westeros", "Poniente", "Westeros", "got"], ["Winterfell", "Invernalia", "Winterfell", "got"],
+  ["Mordor", "Mordor", "Mordor", "lotr"], ["The Shire", "La Comarca", "Das Auenland", "lotr"],
+  ["Westeros", "Poniente", "Westeros", "got"], ["Winterfell", "Invernalia", "Winterfell", "got"],
   ["King's Landing", "Desembarco del Rey", "Königsmund", "got"], ["The Mushroom Kingdom", "El Reino Champiñón", "Das Pilz-Königreich", "mario"],
   ["Hyrule", "Hyrule", "Hyrule", "zelda"], ["Wakanda", "Wakanda", "Wakanda", "blackpanther"], ["Tatooine", "Tatooine", "Tatooine", "starwars"],
   ["Pandora", "Pandora", "Pandora", "avatar"], ["Radiator Springs", "Radiator Springs", "Radiator Springs", "cars"], ["Monstropolis", "Monstruópolis", "Monstropolis", "monsters"],

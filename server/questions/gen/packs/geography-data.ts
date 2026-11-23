@@ -637,40 +637,6 @@ export const US_NICKNAMES: [string, string][] = [
   ["Constitution State", "ct"], ["Beaver State", "or"], ["Hoosier State", "in"], ["Palmetto State", "sc"],
 ];
 
-/** German states. */
-export const DE_STATES: Record<string, L> = {
-  by: ["Bavaria", "Baviera", "Bayern"], bw: ["Baden-Württemberg", "Baden-Wurtemberg", "Baden-Württemberg"], he: ["Hesse", "Hesse", "Hessen"],
-  nw: ["North Rhine-Westphalia", "Renania del Norte-Westfalia", "Nordrhein-Westfalen"], ni: ["Lower Saxony", "Baja Sajonia", "Niedersachsen"],
-  sn: ["Saxony", "Sajonia", "Sachsen"], rp: ["Rhineland-Palatinate", "Renania-Palatinado", "Rheinland-Pfalz"], sl: ["Saarland", "Sarre", "Saarland"],
-  sh: s("Schleswig-Holstein"), th: ["Thuringia", "Turingia", "Thüringen"], st: ["Saxony-Anhalt", "Sajonia-Anhalt", "Sachsen-Anhalt"],
-  bb: ["Brandenburg", "Brandeburgo", "Brandenburg"], mv: ["Mecklenburg-Western Pomerania", "Mecklemburgo-Pomerania Occidental", "Mecklenburg-Vorpommern"],
-};
-export const DE_CAPITALS: [string, L, L[], boolean?][] = [
-  ["by", ["Munich", "Múnich", "München"], [["Nuremberg", "Núremberg", "Nürnberg"], ["Augsburg", "Augsburgo", "Augsburg"]], true],
-  ["bw", s("Stuttgart"), [s("Karlsruhe"), s("Mannheim"), ["Freiburg", "Friburgo", "Freiburg"]], true],
-  ["he", s("Wiesbaden"), [["Frankfurt", "Fráncfort", "Frankfurt am Main"], s("Kassel")]],
-  ["nw", s("Düsseldorf"), [["Cologne", "Colonia", "Köln"], s("Dortmund")]],
-  ["ni", ["Hanover", "Hannover", "Hannover"], [["Brunswick", "Brunswick", "Braunschweig"], s("Wolfsburg")], true],
-  ["sn", ["Dresden", "Dresde", "Dresden"], [s("Leipzig"), s("Chemnitz")], true],
-  ["rp", ["Mainz", "Maguncia", "Mainz"], [["Trier", "Tréveris", "Trier"], ["Koblenz", "Coblenza", "Koblenz"]]],
-  ["sl", s("Saarbrücken"), [s("Saarlouis")]],
-  ["sh", s("Kiel"), [s("Lübeck"), s("Flensburg")]],
-  ["th", s("Erfurt"), [s("Jena"), s("Weimar")]],
-  ["st", ["Magdeburg", "Magdeburgo", "Magdeburg"], [["Halle", "Halle", "Halle (Saale)"], s("Dessau")]],
-  ["bb", s("Potsdam"), [s("Cottbus")]],
-  ["mv", s("Schwerin"), [s("Rostock")]],
-];
-/** [city, state] — not state capitals */
-export const DE_CITIES: [L, string][] = [
-  [["Nuremberg", "Núremberg", "Nürnberg"], "by"], [["Augsburg", "Augsburgo", "Augsburg"], "by"], [["Regensburg", "Ratisbona", "Regensburg"], "by"],
-  [["Würzburg", "Wurzburgo", "Würzburg"], "by"], [s("Heidelberg"), "bw"], [["Freiburg", "Friburgo", "Freiburg"], "bw"], [s("Karlsruhe"), "bw"],
-  [s("Mannheim"), "bw"], [["Frankfurt", "Fráncfort", "Frankfurt am Main"], "he"], [s("Kassel"), "he"], [s("Darmstadt"), "he"], [["Cologne", "Colonia", "Köln"], "nw"],
-  [s("Dortmund"), "nw"], [s("Essen"), "nw"], [s("Bonn"), "nw"], [s("Münster"), "nw"], [["Aachen", "Aquisgrán", "Aachen"], "nw"], [s("Leipzig"), "sn"],
-  [s("Chemnitz"), "sn"], [["Göttingen", "Gotinga", "Göttingen"], "ni"], [s("Wolfsburg"), "ni"], [["Brunswick", "Brunswick", "Braunschweig"], "ni"],
-  [s("Oldenburg"), "ni"], [["Trier", "Tréveris", "Trier"], "rp"], [["Koblenz", "Coblenza", "Koblenz"], "rp"], [s("Lübeck"), "sh"], [s("Flensburg"), "sh"],
-  [s("Rostock"), "mv"], [s("Weimar"), "th"], [s("Jena"), "th"], [["Halle", "Halle", "Halle (Saale)"], "st"], [s("Cottbus"), "bb"],
-];
-
 /** Spanish autonomous communities: [en (text form), es (text form, with article if any), de] */
 export const ES_REGIONS: Record<string, L> = {
   an: ["Andalusia", "Andalucía", "Andalusien"], ct: ["Catalonia", "Cataluña", "Katalonien"], ga: ["Galicia", "Galicia", "Galicien"],

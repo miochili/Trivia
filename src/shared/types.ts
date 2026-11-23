@@ -16,8 +16,9 @@ export type SpecialTileType = "roll_again" | "swap" | "lose_turn" | "double_poin
 export type TileKind = "start" | "finish" | "category" | "special";
 
 /** Number of steps from Start to Finish (the Finish tile is tile N). */
-export const BOARD_LENGTHS = [30, 50, 70] as const;
-export const QUESTION_TIMERS = [15, 30, 45] as const;
+export const BOARD_LENGTHS = [30, 50, 70, 100, 150] as const;
+/** Seconds to answer; 0 = no time limit (handy when someone reads the question out loud). */
+export const QUESTION_TIMERS = [15, 30, 45, 60, 0] as const;
 
 export interface Tile {
   index: number;
