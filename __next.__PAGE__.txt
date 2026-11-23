@@ -1,0 +1,26 @@
+1:"$Sreact.fragment"
+2:"/Trivia/_next/static/chunks/1ua2kfq9s-me6.js"
+3:I[39756,["$2"],"default"]
+4:I[37457,["$2"],"default"]
+5:"/Trivia/_next/static/chunks/191me3mbjqizs.js"
+6:"/Trivia/_next/static/chunks/26mo4fu8ct02z.js"
+7:I[57339,["$2","$5","$6"],"App"]
+b:I[97367,["$2"],"OutletBoundary"]
+c:"$Sreact.suspense"
+f:"ViewportBoundary"
+10:I[97367,["$2"],"$f"]
+11:"MetadataBoundary"
+12:I[97367,["$2"],"$11"]
+13:I[27201,["$2"],"IconMark"]
+:HL["/Trivia/_next/static/chunks/22_i9_4owq4oz.css","style"]
+9:X
+a:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","$L7",null,{}],[["$","script","script-0",{"src":"/Trivia/_next/static/chunks/191me3mbjqizs.js","async":true}],["$","script","script-1",{"src":"/Trivia/_next/static/chunks/26mo4fu8ct02z.js","async":true}]],["$","$Lb",null,{"children":["$","$c",null,{"name":"Next.MetadataOutlet","children":"$@d"}]}]]}],"p":"$@e","v":null,"s":"$9"}}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/Trivia/_next/static/chunks/22_i9_4owq4oz.css","precedence":"next"}],["$","script","script-0",{"src":"/Trivia/_next/static/chunks/1ua2kfq9s-me6.js","async":true}]],["$","html",null,{"lang":"en","children":["$","body",null,{"className":"min-h-dvh antialiased","children":["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}],"notFound":[["$","$L7",null,{}],[]]}]}]}]]}],"p":"$@8","v":null,"s":"$9"},"c":"$Qa"},"h":{"r":["$","$1","h",{"children":[null,["$","$L10",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"}],["$","meta","2",{"name":"theme-color","content":"#2c190e"}]]}],["$","$L12",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$c",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Trivia Quest"}],["$","meta","1",{"name":"description","content":"Roll the dice, travel the map, answer trivia with friends — in English, Español or Deutsch."}],["$","link","2",{"rel":"manifest","href":"/Trivia/manifest.webmanifest"}],["$","meta","3",{"name":"mobile-web-app-capable","content":"yes"}],["$","meta","4",{"name":"apple-mobile-web-app-title","content":"Trivia Quest"}],["$","meta","5",{"name":"apple-mobile-web-app-status-bar-style","content":"black-translucent"}],["$","link","6",{"rel":"icon","href":"/Trivia/icon.svg?icon.0pabg7ygsv-ou.svg","sizes":"any","type":"image/svg+xml"}],["$","link","7",{"rel":"apple-touch-icon","href":"/Trivia/apple-icon.png?apple-icon.453dxevrfbxae.png","sizes":"180x180","type":"image/png"}],["$","$L13","8",{}]]}]}],null]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"p":"$@14","v":null,"s":"$9"}},"a":"$@15","u":"$@16","b":"xAxXVRuUign6HjVKe-Zm8"}
+d:null
+9:300
+16:true
+9:C
+15:0
+8:"$undefined"
+14:"$undefined"
+e:"$undefined"

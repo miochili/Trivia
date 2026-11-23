@@ -1,0 +1,4 @@
+:HL["/Trivia/_next/static/chunks/22_i9_4owq4oz.css","style"]
+:HC["/",""]
+1:[["children",{"s":"__PAGE__","h":160}]]
+0:{"b":"xAxXVRuUign6HjVKe-Zm8","t":{"t":{"s":"","h":80,"c":"$Q1"}}}

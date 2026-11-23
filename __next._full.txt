@@ -1,0 +1,22 @@
+1:"$Sreact.fragment"
+2:"/Trivia/_next/static/chunks/1ua2kfq9s-me6.js"
+3:I[39756,["$2"],"default"]
+4:I[37457,["$2"],"default"]
+5:"/Trivia/_next/static/chunks/191me3mbjqizs.js"
+6:"/Trivia/_next/static/chunks/26mo4fu8ct02z.js"
+7:I[57339,["$2","$5","$6"],"App"]
+9:I[97367,["$2"],"OutletBoundary"]
+a:"$Sreact.suspense"
+c:"ViewportBoundary"
+d:I[97367,["$2"],"$c"]
+f:"MetadataBoundary"
+10:I[97367,["$2"],"$f"]
+12:I[68027,["$2"],"default",1]
+:HL["/Trivia/_next/static/chunks/22_i9_4owq4oz.css","style"]
+:HC["/",""]
+8:[["children",{"s":"__PAGE__","h":512,"d":{"r":["$","$1","c",{"children":[["$","$L7",null,{}],[["$","script","script-0",{"src":"/Trivia/_next/static/chunks/191me3mbjqizs.js","async":true,"nonce":"$undefined"}],["$","script","script-1",{"src":"/Trivia/_next/static/chunks/26mo4fu8ct02z.js","async":true,"nonce":"$undefined"}]],["$","$L9",null,{"children":["$","$a",null,{"name":"Next.MetadataOutlet","children":"$@b"}]}]]}],"p":false,"v":null}}]]
+0:{"P":null,"c":["",""],"q":"","i":false,"t":{"t":{"s":"","h":528,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/Trivia/_next/static/chunks/22_i9_4owq4oz.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}],["$","script","script-0",{"src":"/Trivia/_next/static/chunks/1ua2kfq9s-me6.js","async":true,"nonce":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"className":"min-h-dvh antialiased","children":["$","$L3",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L4",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","$L7",null,{}],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]}]]}],"p":false,"v":null},"c":"$Q8"},"h":{"r":["$","$1","h",{"children":[null,["$","$Ld",null,{"children":"$Le"}],["$","$L10",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$a",null,{"name":"Next.Metadata","children":"$L11"}]}],null]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"p":false,"v":null}},"m":"$undefined","G":["$12",[["$","link","0",{"rel":"stylesheet","href":"/Trivia/_next/static/chunks/22_i9_4owq4oz.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]]],"S":true,"r":"$undefined","s":"$undefined","a":"$undefined","l":"$undefined","p":"$undefined","d":"$undefined","b":"xAxXVRuUign6HjVKe-Zm8"}
+e:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"}],["$","meta","2",{"name":"theme-color","content":"#2c190e"}]]
+13:I[27201,["$2"],"IconMark"]
+b:null
+11:[["$","title","0",{"children":"Trivia Quest"}],["$","meta","1",{"name":"description","content":"Roll the dice, travel the map, answer trivia with friends — in English, Español or Deutsch."}],["$","link","2",{"rel":"manifest","href":"/Trivia/manifest.webmanifest","crossOrigin":"$undefined"}],["$","meta","3",{"name":"mobile-web-app-capable","content":"yes"}],["$","meta","4",{"name":"apple-mobile-web-app-title","content":"Trivia Quest"}],["$","meta","5",{"name":"apple-mobile-web-app-status-bar-style","content":"black-translucent"}],["$","link","6",{"rel":"icon","href":"/Trivia/icon.svg?icon.0pabg7ygsv-ou.svg","sizes":"any","type":"image/svg+xml"}],["$","link","7",{"rel":"apple-touch-icon","href":"/Trivia/apple-icon.png?apple-icon.453dxevrfbxae.png","sizes":"180x180","type":"image/png"}],["$","$L13","8",{}]]
