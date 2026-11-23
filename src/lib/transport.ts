@@ -270,7 +270,7 @@ export async function joinAsGuest(code: string): Promise<Transport> {
     if (closed || retrying) return;
     setStatus("offline");
     lostSince ??= Date.now();
-    if (Date.now() - lostSince > 60_000) {
+    if (Date.now() - lostSince > 120_000) {
       hub.fire(LOCAL.HOST_LOST);
       return;
     }
@@ -278,7 +278,11 @@ export async function joinAsGuest(code: string): Promise<Transport> {
     dc = null;
     setTimeout(() => {
       retrying = false;
-      connect().catch(() => lost());
+      connect().catch(() => {
+        peer?.destroy();
+        peer = null;
+        lost();
+      });
     }, 2000);
   };
 
@@ -293,7 +297,21 @@ export async function joinAsGuest(code: string): Promise<Transport> {
     }
   }, HEARTBEAT_MS);
 
-  await connect();
+  // First connection: retry a few times with a fresh peer — a single hiccup on the signalling
+  // server or a slow network shouldn't force everyone into a new lobby.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await connect();
+      break;
+    } catch (e) {
+      if (closed || attempt >= 4) throw e;
+      (dc as { close(): void } | null)?.close();
+      dc = null;
+      (peer as { destroy(): void } | null)?.destroy();
+      peer = null;
+      await new Promise((r) => setTimeout(r, 1500 * attempt));
+    }
+  }
 
   return {
     kind: "guest",

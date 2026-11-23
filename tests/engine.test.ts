@@ -74,7 +74,7 @@ afterEach(() => vi.useRealTimers());
 // ── tests ────────────────────────────────────────────────────────────
 describe("board generation", () => {
   it("has start/finish, one HQ per category, and specials", () => {
-    const cats: CategoryId[] = ["history", "science", "pop_culture", "sports", "art", "geography", "food", "nature"];
+    const cats: CategoryId[] = ["history", "science", "pop_culture", "sports", "art", "geography", "food", "nature", "games", "cinema"];
     for (const len of [30, 45, 60]) {
       const b = generateBoard(len, cats);
       expect(b).toHaveLength(len);

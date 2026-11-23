@@ -50,6 +50,8 @@ export const CATEGORY_META: Record<CategoryId, { name: string; color: string; ic
   geography: { name: "Geography", color: "#35577f", icon: "🧭" },
   food: { name: "Food & Drink", color: "#7b4a2a", icon: "🍲" },
   nature: { name: "Nature & Animals", color: "#5f7a2a", icon: "🌿" },
+  games: { name: "Video Games", color: "#2b8a99", icon: "🎮" },
+  cinema: { name: "Cinema & TV", color: "#3c3a48", icon: "🎬" },
 };
 
 export const SPECIAL_META: Record<SpecialTileType, { name: string; icon: string; color: string; blurb: string }> = {

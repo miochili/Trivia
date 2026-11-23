@@ -4,7 +4,7 @@
  * Secrets (correct answers, session tokens) never appear in these shapes.
  */
 
-export const CATEGORY_IDS = ["history", "science", "pop_culture", "sports", "art", "geography", "food", "nature"] as const;
+export const CATEGORY_IDS = ["history", "science", "pop_culture", "sports", "art", "geography", "food", "nature", "games", "cinema"] as const;
 export type CategoryId = (typeof CATEGORY_IDS)[number];
 
 export type Difficulty = "easy" | "medium" | "hard";

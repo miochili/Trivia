@@ -1140,6 +1140,19 @@ export interface PackApi {
   centuryL: (c: number) => L;
 }
 
+const GAMES_FAMILIES = new Set(["game-studio", "game-rev", "pop.console-maker", "pop.console-rev", "pop.console-first", "pop.pokemon-type", "pop.pokemon-type-rev"]);
+const CINEMA_FAMILIES = new Set([
+  "film", "film-rev", "animated-studio", "animated-rev", "tv-country", "tv-rev", "pop.villain-film", "pop.villain-of", "pop.best-picture",
+  "pop.star-wars-order", "pop.animated-first", "pop.setting", "pop.setting-rev", "pop.toon-animal",
+]);
+const GAME_FRANCHISES = new Set(["pokemon", "zelda", "mario", "sonic", "halo", "tombraider", "godofwar", "lastofus", "minecraft", "streetfighter"]);
+const SCREEN_FRANCHISES = new Set([
+  "breakingbad", "strangerthings", "simpsons", "got", "friends", "moneyheist", "squidgame", "starwars", "lotr", "pirates", "lionking",
+  "frozen", "toystory", "nemo", "hungergames", "backtofuture", "matrix", "marvel", "shrek", "wednesday",
+]);
+const FRANCHISE_BY_LABEL = new Map(Object.entries(FRANCHISES).map(([k, v]) => [v[0], k]));
+const CINEMA_PEOPLE = new Set(PEOPLE.film.map((p) => `person-known:${p}`));
+
 let cache: StoredQuestion[] | null = null;
 
 /** All generated questions (built once, deterministic). */
@@ -1157,6 +1170,21 @@ export function generatedQuestions(): StoredQuestion[] {
       COUNTRIES, byId, nameOf, deAus, deZu, deAcc, esA, CONTINENTS, contKeys, yearL, centuryL,
     };
     for (const pack of PACKS) pack(api);
+    // Video games and film/TV have their own categories.
+    for (const q of out) {
+      const f = q.family ?? "";
+      if (f === "character" || f === "character-rev") {
+        // "which franchise is this character from?" — split by what the franchise is
+        const key = f === "character" ? FRANCHISE_BY_LABEL.get(q.options[q.correctIndex]) : q.stem?.split(":")[1];
+        const to = key && GAME_FRANCHISES.has(key) ? "games" : key && SCREEN_FRANCHISES.has(key) ? "cinema" : null;
+        if (to) {
+          q.category = to;
+          q.family = `${to === "games" ? "game" : "screen"}-${f}`;
+          q.stem = `${q.family}:${q.stem}`;
+        }
+      } else if (GAMES_FAMILIES.has(f)) q.category = "games";
+      else if (CINEMA_FAMILIES.has(f) || (f === "person-field" && q.stem?.startsWith("person-field:film:")) || (f === "person-known" && CINEMA_PEOPLE.has(q.stem ?? ""))) q.category = "cinema";
+    }
     cache = out;
   }
   return cache;
