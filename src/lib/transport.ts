@@ -98,8 +98,6 @@ async function peerOptions() {
       iceServers: [
         { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
         { urls: "stun:stun.cloudflare.com:3478" },
-        // Free public relay for strict mobile networks (best effort).
-        { urls: ["turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443", "turn:openrelay.metered.ca:443?transport=tcp"], username: "openrelayproject", credential: "openrelayproject" },
       ],
     },
   };
@@ -137,16 +135,26 @@ export async function startHosting(): Promise<{ transport: Transport; code: stri
     code = makeRoomCode();
     const candidate = new Peer(peerId(code), opts);
     const ok = await new Promise<boolean>((resolve) => {
-      candidate.once("open", () => resolve(true));
+      const t = setTimeout(() => {
+        attempt = 99; // signalling server not answering — don't keep waiting
+        resolve(false);
+      }, 8000);
+      candidate.once("open", () => {
+        clearTimeout(t);
+        resolve(true);
+      });
       candidate.once("error", (err: { type?: string }) => {
-        candidate.destroy();
-        if (err.type === "unavailable-id") resolve(false);
-        else resolve(false);
+        clearTimeout(t);
+        resolve(false);
+        // A taken code just means "try another"; anything else = signalling server unreachable.
+        if (err.type !== "unavailable-id") attempt = 99;
       });
     });
     if (ok) peer = candidate;
+    else candidate.destroy();
   }
-  if (!peer) throw new Error("err.noResponse");
+  // No signalling server? Host through the relay only (guests fall back to it automatically).
+  if (!peer) code = makeRoomCode();
   const hostPeer = peer;
 
   const questionBank = new InMemoryQuestionBank();
@@ -158,7 +166,7 @@ export async function startHosting(): Promise<{ transport: Transport; code: stri
   manager.addConn({ id: LOCAL_ID, send: (e, p) => queueMicrotask(() => hub.fire(e, p)) });
 
   // Guests
-  hostPeer.on("connection", (dc) => {
+  hostPeer?.on("connection", (dc) => {
     const id = `${dc.peer}:${dc.connectionId}`;
     let lastSeen = Date.now();
     const send = (w: Wire) => {
@@ -188,7 +196,43 @@ export async function startHosting(): Promise<{ transport: Transport; code: stri
     dc.on("close", close);
     dc.on("error", close);
   });
-  hostPeer.on("disconnected", () => {
+  // Guests that can't reach us directly come in through the relay instead.
+  let stopRelay: (() => void) | null = null;
+  let hostClosed = false;
+  const relayGuests = new Map<string, { conn: { id: string; send: (e: string, p?: unknown) => void }; send: (w: object) => void }>();
+  const relayReady = import("./relay")
+    .then(({ hostRelay }) =>
+      hostRelay(code, {
+        onOpen(gid, send) {
+          const conn = { id: `relay:${gid}`, send: (e: string, p?: unknown) => send({ t: "evt", e, p }) };
+          relayGuests.set(gid, { conn, send });
+          manager.addConn(conn);
+        },
+        onMsg(gid, w) {
+          const g = relayGuests.get(gid);
+          if (!g) return;
+          if (w.t === "ping") g.send({ t: "pong" });
+          else if (w.t === "req" && typeof w.e === "string" && w.e !== "CREATE_ROOM" && typeof w.id === "number") {
+            void dispatch(g.conn, w.e, w.p).then((r) => g.send({ t: "ack", id: w.id, r }));
+          }
+        },
+        onClose(gid) {
+          if (relayGuests.delete(gid)) manager.removeConn(`relay:${gid}`);
+        },
+      }),
+    )
+    .then((stop) => {
+      stopRelay = stop;
+      if (hostClosed) stop();
+      return true;
+    })
+    .catch(() => false);
+  if (!hostPeer && !(await relayReady)) {
+    manager.shutdown();
+    throw new Error("err.noResponse");
+  }
+
+  hostPeer?.on("disconnected", () => {
     // Lost the signalling server only — existing data channels keep working.
     setTimeout(() => !hostPeer.destroyed && hostPeer.reconnect(), 1000);
   });
@@ -198,125 +242,173 @@ export async function startHosting(): Promise<{ transport: Transport; code: stri
     kind: "host",
     request: (event, payload) => dispatch({ id: LOCAL_ID, send: () => {} }, event, payload),
     close: () => {
+      hostClosed = true;
+      stopRelay?.();
       manager.shutdown();
-      hostPeer.destroy();
+      hostPeer?.destroy();
     },
   };
   return { transport, code };
 }
 
-/** Join someone's room over WebRTC; reconnects automatically. */
+/**
+ * Join someone's room. Tries a direct WebRTC link first; if that can't be made
+ * (different networks, strict routers, mobile data) it falls back to the relay.
+ * Reconnects automatically, switching route if needed.
+ */
 export async function joinAsGuest(code: string): Promise<Transport> {
   const { Peer } = await import("peerjs");
   const opts = await peerOptions();
+  type Link = import("./relay").Link;
   let peer: InstanceType<typeof Peer> | null = null;
-  let dc: ReturnType<InstanceType<typeof Peer>["connect"]> | null = null;
+  let link: Link | null = null;
   let seq = 0;
   let everConnected = false;
   let closed = false;
   let lastSeen = Date.now();
   let lostSince: number | null = null;
+  /** Once the direct route has failed, stick to the relay. */
+  let useRelay = false;
   const pending = new Map<number, (r: Ack<Record<string, unknown>>) => void>();
   const waiters: (() => void)[] = [];
 
   const setStatus = (s: ConnStatus) => hub.fire(LOCAL.STATUS, s);
 
-  const connect = () =>
-    new Promise<void>((resolve, reject) => {
-      if (closed) return reject(new Error("closed"));
-      setStatus("connecting");
-      const start = () => {
-        const c = peer!.connect(peerId(code), { reliable: true, serialization: "json" });
-        dc = c;
-        const failTimer = setTimeout(() => c.open || fail(), 12000);
-        c.on("open", () => {
-          clearTimeout(failTimer);
-          lastSeen = Date.now();
-          lostSince = null;
-          setStatus("online");
-          if (everConnected) hub.fire(LOCAL.RECONNECTED);
-          everConnected = true;
-          waiters.splice(0).forEach((w) => w());
-          resolve();
-        });
-        c.on("data", (raw) => {
-          lastSeen = Date.now();
-          const w = raw as Wire;
-          if (w.t === "ack") {
-            pending.get(w.id)?.(w.r);
-            pending.delete(w.id);
-          } else if (w.t === "evt") hub.fire(w.e, w.p);
-        });
-        c.on("close", () => dc === c && lost());
-        c.on("error", () => dc === c && lost());
-      };
+  const onWire = (w: Wire) => {
+    lastSeen = Date.now();
+    if (w.t === "ack") {
+      pending.get(w.id)?.(w.r);
+      pending.delete(w.id);
+    } else if (w.t === "evt") hub.fire(w.e, w.p);
+  };
+
+  const dropPeer = () => {
+    peer?.destroy();
+    peer = null;
+  };
+
+  /** Direct WebRTC data channel. */
+  const viaPeer = () =>
+    new Promise<Link>((resolve, reject) => {
+      let done = false;
       const fail = () => {
-        if (!everConnected) reject(new Error("err.cantReachHost"));
-        else lost();
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        peer?.off("error", onErr);
+        reject(new Error("err.cantReachHost"));
+      };
+      const onErr = () => fail();
+      const timer = setTimeout(fail, 8_000);
+      const start = () => {
+        if (done || !peer) return;
+        const c = peer.connect(peerId(code), { reliable: true, serialization: "json" });
+        const l: Link = { send: (w) => c.open && c.send(w), isOpen: () => c.open, close: () => c.close(), deadAfterMs: DEAD_AFTER_MS };
+        c.on("open", () => {
+          if (done) return c.close();
+          done = true;
+          clearTimeout(timer);
+          peer?.off("error", onErr);
+          resolve(l);
+        });
+        c.on("data", (raw) => link === l && onWire(raw as Wire));
+        c.on("close", () => (link === l ? lost() : fail()));
+        c.on("error", () => (link === l ? lost() : fail()));
       };
       if (!peer || peer.destroyed) {
         peer = new Peer(opts);
         peer.once("open", start);
-        peer.on("error", (err: { type?: string }) => {
-          if (err.type === "peer-unavailable") fail();
-          else if (!everConnected) reject(new Error("err.cantReachHost"));
-        });
-        peer.on("disconnected", () => !peer!.destroyed && peer!.reconnect());
+        peer.on("disconnected", () => peer && !peer.destroyed && peer.reconnect());
       } else start();
+      peer.on("error", onErr);
     });
+
+  /** Through the public relay. */
+  const viaRelay = async () => {
+    const { joinRelay } = await import("./relay");
+    let me: Link | null = null;
+    me = await joinRelay(code, (w) => link === me && onWire(w as Wire));
+    return me;
+  };
+
+  /** One attempt: direct first (unless it already failed before), then the relay. */
+  const connectOnce = async (): Promise<Link> => {
+    setStatus("connecting");
+    if (!useRelay) {
+      try {
+        return await viaPeer();
+      } catch {
+        dropPeer();
+      }
+    }
+    const l = await viaRelay();
+    useRelay = true;
+    return l;
+  };
+
+  const opened = (l: Link) => {
+    if (closed) return l.close();
+    link = l;
+    lastSeen = Date.now();
+    lostSince = null;
+    setStatus("online");
+    if (everConnected) hub.fire(LOCAL.RECONNECTED);
+    everConnected = true;
+    waiters.splice(0).forEach((w) => w());
+  };
 
   let retrying = false;
   const lost = () => {
     if (closed || retrying) return;
     setStatus("offline");
+    const old = link;
+    link = null;
+    old?.close();
     lostSince ??= Date.now();
     if (Date.now() - lostSince > 120_000) {
       hub.fire(LOCAL.HOST_LOST);
       return;
     }
     retrying = true;
-    dc = null;
     setTimeout(() => {
-      retrying = false;
-      connect().catch(() => {
-        peer?.destroy();
-        peer = null;
-        lost();
-      });
-    }, 2000);
+      connectOnce()
+        .then((l) => {
+          retrying = false;
+          opened(l);
+        })
+        .catch(() => {
+          retrying = false;
+          lost();
+        });
+    }, 1500);
   };
 
   const hb = setInterval(() => {
     if (closed) return clearInterval(hb);
-    if (dc?.open) {
-      dc.send({ t: "ping" } satisfies Wire);
-      if (Date.now() - lastSeen > DEAD_AFTER_MS) {
-        dc.close();
-        lost();
-      }
-    }
+    if (!link) return;
+    if (link.isOpen()) link.send({ t: "ping" } satisfies Wire);
+    if (Date.now() - lastSeen > link.deadAfterMs) lost();
   }, HEARTBEAT_MS);
 
-  // First connection: retry a few times with a fresh peer — a single hiccup on the signalling
-  // server or a slow network shouldn't force everyone into a new lobby.
+  // First connection: a few attempts before giving up, so a hiccup doesn't force a new lobby.
   for (let attempt = 1; ; attempt++) {
     try {
-      await connect();
+      opened(await connectOnce());
       break;
     } catch (e) {
-      if (closed || attempt >= 4) throw e;
-      (dc as { close(): void } | null)?.close();
-      dc = null;
-      (peer as { destroy(): void } | null)?.destroy();
-      peer = null;
-      await new Promise((r) => setTimeout(r, 1500 * attempt));
+      if (closed || attempt >= 3) {
+        clearInterval(hb);
+        dropPeer();
+        throw e;
+      }
+      await new Promise((r) => setTimeout(r, 1000 * attempt));
     }
   }
 
   return {
     kind: "guest",
     async request(event, payload, timeoutMs) {
-      if (!dc?.open) {
+      if (!link?.isOpen()) {
         const ready = await Promise.race([
           new Promise<boolean>((r) => waiters.push(() => r(true))),
           new Promise<boolean>((r) => setTimeout(() => r(false), timeoutMs)),
@@ -333,13 +425,14 @@ export async function joinAsGuest(code: string): Promise<Transport> {
           clearTimeout(t);
           resolve(r);
         });
-        dc!.send({ t: "req", id, e: event, p: payload } satisfies Wire);
+        link!.send({ t: "req", id, e: event, p: payload } satisfies Wire);
       });
     },
     close() {
       closed = true;
       clearInterval(hb);
-      peer?.destroy();
+      link?.close();
+      dropPeer();
     },
   };
 }
