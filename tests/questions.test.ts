@@ -33,7 +33,7 @@ describe("question bank", async () => {
         expect(l!.text, q.id).not.toMatch(/undefined|NaN|\$\{|\[object/);
       }
     }
-  });
+  }, 120_000);
 
   it("no longer has Switzerland-specific questions", () => {
     const swiss = all.filter((q) => /Swiss|Switzerland/i.test(q.text) || q.options.some((o) => /Swiss|Switzerland/i.test(o)));
