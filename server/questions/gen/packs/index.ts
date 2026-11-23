@@ -7,6 +7,8 @@ import popculture from "./pop_culture";
 import sports from "./sports";
 import food from "./food";
 import nature from "./nature";
+import media from "./media";
+import extras from "./extras";
 
 /** Question packs, run after the built-in families. Each fills one category. */
-export const PACKS: ((api: PackApi) => void)[] = [geography, history, science, art, popculture, sports, food, nature];
+export const PACKS: ((api: PackApi) => void)[] = [geography, history, science, art, popculture, sports, food, nature, media, extras];
